@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.assess.mapper.AssessRegulationClauseMapper">
+
+	<resultMap type="com.ruoyi.assess.domain.AssessRegulationClause" id="AssessRegulationClauseResult">
+		<id     property="clauseId"        column="clause_id"        />
+		<result property="regulationId"    column="regulation_id"    />
+		<result property="parentId"        column="parent_id"        />
+		<result property="clauseNo"        column="clause_no"        />
+		<result property="clauseTitle"     column="clause_title"     />
+		<result property="clauseText"      column="clause_text"      />
+		<result property="clauseType"      column="clause_type"      />
+		<result property="maxScore"        column="max_score"        />
+		<result property="sortOrder"       column="sort_order"       />
+		<result property="createBy"        column="create_by"        />
+		<result property="createTime"      column="create_time"      />
+		<result property="updateBy"        column="update_by"        />
+		<result property="updateTime"      column="update_time"      />
+		<result property="delFlag"         column="del_flag"         />
+		<result property="remark"          column="remark"           />
+	</resultMap>
+
+	<sql id="selectClauseVo">
+        select clause_id, regulation_id, parent_id, clause_no, clause_title, clause_text,
+               clause_type, max_score, sort_order, create_by, create_time, update_by, update_time,
+               del_flag, remark
+        from assess_regulation_clause
+    </sql>
+
+	<select id="selectClauseList" parameterType="com.ruoyi.assess.domain.AssessRegulationClause" resultMap="AssessRegulationClauseResult">
+		<include refid="selectClauseVo"/>
+		<where>
+			del_flag = '0'
+			<if test="regulationId != null">
+				AND regulation_id = #{regulationId}
+			</if>
+			<if test="parentId != null">
+				AND parent_id = #{parentId}
+			</if>
+			<if test="clauseNo != null and clauseNo != ''">
+				AND clause_no like concat('%', #{clauseNo}, '%')
+			</if>
+			<if test="clauseTitle != null and clauseTitle != ''">
+				AND clause_title like concat('%', #{clauseTitle}, '%')
+			</if>
+			<if test="clauseType != null and clauseType != ''">
+				AND clause_type = #{clauseType}
+			</if>
+		</where>
+		order by sort_order asc
+	</select>
+
+	<select id="selectClauseById" parameterType="Long" resultMap="AssessRegulationClauseResult">
+		<include refid="selectClauseVo"/>
+		where clause_id = #{clauseId} and del_flag = '0'
+	</select>
+
+	<select id="selectClauseByRegulationId" parameterType="Long" resultMap="AssessRegulationClauseResult">
+		<include refid="selectClauseVo"/>
+		where regulation_id = #{regulationId} and del_flag = '0'
+		order by sort_order asc
+	</select>
+
+	<insert id="insertClause" parameterType="com.ruoyi.assess.domain.AssessRegulationClause" useGeneratedKeys="true" keyProperty="clauseId">
+		insert into assess_regulation_clause
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="regulationId != null">regulation_id,</if>
+			<if test="parentId != null">parent_id,</if>
+			<if test="clauseNo != null and clauseNo != ''">clause_no,</if>
+			<if test="clauseTitle != null and clauseTitle != ''">clause_title,</if>
+			<if test="clauseText != null and clauseText != ''">clause_text,</if>
+			<if test="clauseType != null and clauseType != ''">clause_type,</if>
+			<if test="maxScore != null">max_score,</if>
+			<if test="sortOrder != null">sort_order,</if>
+			<if test="createBy != null and createBy != ''">create_by,</if>
+			<if test="remark != null and remark != ''">remark,</if>
+			create_time,
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="regulationId != null">#{regulationId},</if>
+			<if test="parentId != null">#{parentId},</if>
+			<if test="clauseNo != null and clauseNo != ''">#{clauseNo},</if>
+			<if test="clauseTitle != null and clauseTitle != ''">#{clauseTitle},</if>
+			<if test="clauseText != null and clauseText != ''">#{clauseText},</if>
+			<if test="clauseType != null and clauseType != ''">#{clauseType},</if>
+			<if test="maxScore != null">#{maxScore},</if>
+			<if test="sortOrder != null">#{sortOrder},</if>
+			<if test="createBy != null and createBy != ''">#{createBy},</if>
+			<if test="remark != null and remark != ''">#{remark},</if>
+			sysdate(),
+		</trim>
+	</insert>
+
+	<update id="updateClause" parameterType="com.ruoyi.assess.domain.AssessRegulationClause">
+		update assess_regulation_clause
+		<set>
+			<if test="regulationId != null">regulation_id = #{regulationId},</if>
+			<if test="parentId != null">parent_id = #{parentId},</if>
+			<if test="clauseNo != null and clauseNo != ''">clause_no = #{clauseNo},</if>
+			<if test="clauseTitle != null and clauseTitle != ''">clause_title = #{clauseTitle},</if>
+			<if test="clauseText != null">clause_text = #{clauseText},</if>
+			<if test="clauseType != null and clauseType != ''">clause_type = #{clauseType},</if>
+			<if test="maxScore != null">max_score = #{maxScore},</if>
+			<if test="sortOrder != null">sort_order = #{sortOrder},</if>
+			<if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+			<if test="remark != null">remark = #{remark},</if>
+			update_time = sysdate(),
+		</set>
+		where clause_id = #{clauseId}
+	</update>
+
+	<update id="deleteClauseById" parameterType="Long">
+		update assess_regulation_clause set del_flag = '2' where clause_id = #{clauseId}
+	</update>
+
+	<update id="deleteClauseByIds" parameterType="Long">
+		update assess_regulation_clause set del_flag = '2' where clause_id in
+		<foreach item="clauseId" collection="array" open="(" separator="," close=")">
+			#{clauseId}
+		</foreach>
+	</update>
+
+	<update id="deleteClauseByRegulationId" parameterType="Long">
+		update assess_regulation_clause set del_flag = '2' where regulation_id = #{regulationId} and del_flag = '0'
+	</update>
+
+</mapper>

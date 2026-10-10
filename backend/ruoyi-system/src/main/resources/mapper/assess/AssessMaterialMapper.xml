@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.assess.mapper.AssessMaterialMapper">
+
+	<resultMap type="com.ruoyi.assess.domain.AssessMaterial" id="AssessMaterialResult">
+		<id     property="materialId"     column="material_id"     />
+		<result property="userId"         column="user_id"         />
+		<result property="studentNo"      column="student_no"      />
+		<result property="studentName"    column="student_name"    />
+		<result property="className"      column="class_name"      />
+		<result property="deptId"         column="dept_id"         />
+		<result property="materialName"   column="material_name"   />
+		<result property="materialType"   column="material_type"   />
+		<result property="fileUrl"        column="file_url"        />
+		<result property="fileType"       column="file_type"       />
+		<result property="fileSize"       column="file_size"       />
+		<result property="ocrStatus"      column="ocr_status"      />
+		<result property="ocrText"        column="ocr_text"        />
+		<result property="extractStatus"  column="extract_status"  />
+		<result property="createBy"       column="create_by"       />
+		<result property="createTime"     column="create_time"     />
+		<result property="updateBy"       column="update_by"       />
+		<result property="updateTime"     column="update_time"     />
+		<result property="delFlag"        column="del_flag"        />
+		<result property="remark"         column="remark"          />
+	</resultMap>
+
+	<sql id="selectMaterialVo">
+        select material_id, user_id, student_no, student_name, class_name, dept_id,
+               material_name, material_type, file_url, file_type, file_size,
+               ocr_status, ocr_text, extract_status,
+               create_by, create_time, update_by, update_time, del_flag, remark
+        from assess_material
+    </sql>
+
+	<select id="selectMaterialList" parameterType="com.ruoyi.assess.domain.AssessMaterial" resultMap="AssessMaterialResult">
+		<include refid="selectMaterialVo"/>
+		<where>
+			del_flag = '0'
+			<if test="materialName != null and materialName != ''">
+				AND material_name like concat('%', #{materialName}, '%')
+			</if>
+			<if test="materialType != null and materialType != ''">
+				AND material_type = #{materialType}
+			</if>
+			<if test="ocrStatus != null and ocrStatus != ''">
+				AND ocr_status = #{ocrStatus}
+			</if>
+			<if test="userId != null">
+				AND user_id = #{userId}
+			</if>
+			<if test="deptId != null">
+				AND dept_id = #{deptId}
+			</if>
+		</where>
+		order by material_id desc
+	</select>
+
+	<select id="selectMaterialById" parameterType="Long" resultMap="AssessMaterialResult">
+		<include refid="selectMaterialVo"/>
+		where material_id = #{materialId} and del_flag = '0'
+	</select>
+
+	<insert id="insertMaterial" parameterType="com.ruoyi.assess.domain.AssessMaterial" useGeneratedKeys="true" keyProperty="materialId">
+		insert into assess_material
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="userId != null">user_id,</if>
+			<if test="studentNo != null and studentNo != ''">student_no,</if>
+			<if test="studentName != null and studentName != ''">student_name,</if>
+			<if test="className != null and className != ''">class_name,</if>
+			<if test="deptId != null">dept_id,</if>
+			<if test="materialName != null and materialName != ''">material_name,</if>
+			<if test="materialType != null and materialType != ''">material_type,</if>
+			<if test="fileUrl != null and fileUrl != ''">file_url,</if>
+			<if test="fileType != null and fileType != ''">file_type,</if>
+			<if test="fileSize != null">file_size,</if>
+			<if test="ocrStatus != null and ocrStatus != ''">ocr_status,</if>
+			<if test="ocrText != null">ocr_text,</if>
+			<if test="extractStatus != null and extractStatus != ''">extract_status,</if>
+			<if test="createBy != null and createBy != ''">create_by,</if>
+			<if test="remark != null and remark != ''">remark,</if>
+			create_time,
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="userId != null">#{userId},</if>
+			<if test="studentNo != null and studentNo != ''">#{studentNo},</if>
+			<if test="studentName != null and studentName != ''">#{studentName},</if>
+			<if test="className != null and className != ''">#{className},</if>
+			<if test="deptId != null">#{deptId},</if>
+			<if test="materialName != null and materialName != ''">#{materialName},</if>
+			<if test="materialType != null and materialType != ''">#{materialType},</if>
+			<if test="fileUrl != null and fileUrl != ''">#{fileUrl},</if>
+			<if test="fileType != null and fileType != ''">#{fileType},</if>
+			<if test="fileSize != null">#{fileSize},</if>
+			<if test="ocrStatus != null and ocrStatus != ''">#{ocrStatus},</if>
+			<if test="ocrText != null">#{ocrText},</if>
+			<if test="extractStatus != null and extractStatus != ''">#{extractStatus},</if>
+			<if test="createBy != null and createBy != ''">#{createBy},</if>
+			<if test="remark != null and remark != ''">#{remark},</if>
+			sysdate(),
+		</trim>
+	</insert>
+
+	<update id="updateMaterial" parameterType="com.ruoyi.assess.domain.AssessMaterial">
+		update assess_material
+		<set>
+			<if test="userId != null">user_id = #{userId},</if>
+			<if test="studentNo != null and studentNo != ''">student_no = #{studentNo},</if>
+			<if test="studentName != null and studentName != ''">student_name = #{studentName},</if>
+			<if test="className != null and className != ''">class_name = #{className},</if>
+			<if test="deptId != null">dept_id = #{deptId},</if>
+			<if test="materialName != null and materialName != ''">material_name = #{materialName},</if>
+			<if test="materialType != null and materialType != ''">material_type = #{materialType},</if>
+			<if test="fileUrl != null and fileUrl != ''">file_url = #{fileUrl},</if>
+			<if test="fileType != null and fileType != ''">file_type = #{fileType},</if>
+			<if test="fileSize != null">file_size = #{fileSize},</if>
+			<if test="ocrStatus != null and ocrStatus != ''">ocr_status = #{ocrStatus},</if>
+			<if test="ocrText != null">ocr_text = #{ocrText},</if>
+			<if test="extractStatus != null and extractStatus != ''">extract_status = #{extractStatus},</if>
+			<if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+			<if test="remark != null">remark = #{remark},</if>
+			update_time = sysdate(),
+		</set>
+		where material_id = #{materialId}
+	</update>
+
+	<update id="deleteMaterialByIds" parameterType="Long">
+		update assess_material set del_flag = '2' where material_id in
+		<foreach item="materialId" collection="array" open="(" separator="," close=")">
+			#{materialId}
+		</foreach>
+	</update>
+
+	<update id="reprocessMaterial" parameterType="com.ruoyi.assess.domain.AssessMaterial">
+		update assess_material
+		set ocr_status = '0', ocr_text = null, extract_status = '0',
+		    update_by = #{updateBy}, update_time = sysdate()
+		where material_id = #{materialId}
+	</update>
+
+</mapper>

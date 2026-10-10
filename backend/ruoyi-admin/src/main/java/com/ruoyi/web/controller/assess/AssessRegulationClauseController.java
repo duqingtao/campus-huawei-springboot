@@ -1,0 +1,117 @@
+package com.ruoyi.web.controller.assess;
+
+import java.util.List;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import com.ruoyi.common.annotation.Log;
+import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.page.TableDataInfo;
+import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.common.utils.poi.ExcelUtil;
+import com.ruoyi.assess.domain.AssessRegulationClause;
+import com.ruoyi.assess.service.IAssessRegulationClauseService;
+
+/**
+ * 综测条款管理
+ *
+ * @author ruoyi
+ */
+@RestController
+@RequestMapping("/assess/clause")
+public class AssessRegulationClauseController extends BaseController
+{
+    @Autowired
+    private IAssessRegulationClauseService clauseService;
+
+    /**
+     * 查询综测条款列表
+     */
+    @PreAuthorize("@ss.hasPermi('assess:clause:list')")
+    @GetMapping("/list")
+    public TableDataInfo list(AssessRegulationClause clause)
+    {
+        startPage();
+        List<AssessRegulationClause> list = clauseService.selectClauseList(clause);
+        return getDataTable(list);
+    }
+
+    /**
+     * 导出综测条款列表
+     */
+    @PreAuthorize("@ss.hasPermi('assess:clause:export')")
+    @Log(title = "条款管理", businessType = BusinessType.EXPORT)
+    @PostMapping("/export")
+    public void export(HttpServletResponse response, AssessRegulationClause clause)
+    {
+        List<AssessRegulationClause> list = clauseService.selectClauseList(clause);
+        ExcelUtil<AssessRegulationClause> util = new ExcelUtil<AssessRegulationClause>(AssessRegulationClause.class);
+        util.exportExcel(response, list, "条款数据");
+    }
+
+    /**
+     * 根据条款ID获取详细信息
+     */
+    @PreAuthorize("@ss.hasPermi('assess:clause:query')")
+    @GetMapping(value = "/{clauseId}")
+    public AjaxResult getInfo(@PathVariable Long clauseId)
+    {
+        return success(clauseService.selectClauseById(clauseId));
+    }
+
+    /**
+     * 根据细则ID查询条款树形结构
+     */
+    @PreAuthorize("@ss.hasPermi('assess:clause:query')")
+    @GetMapping("/tree/{regulationId}")
+    public AjaxResult tree(@PathVariable Long regulationId)
+    {
+        List<AssessRegulationClause> tree = clauseService.selectClauseTreeByRegulationId(regulationId);
+        return success(tree);
+    }
+
+    /**
+     * 新增综测条款
+     */
+    @PreAuthorize("@ss.hasPermi('assess:clause:add')")
+    @Log(title = "条款管理", businessType = BusinessType.INSERT)
+    @PostMapping
+    public AjaxResult add(@Validated @RequestBody AssessRegulationClause clause)
+    {
+        clause.setCreateBy(getUsername());
+        return toAjax(clauseService.insertClause(clause));
+    }
+
+    /**
+     * 修改综测条款
+     */
+    @PreAuthorize("@ss.hasPermi('assess:clause:edit')")
+    @Log(title = "条款管理", businessType = BusinessType.UPDATE)
+    @PutMapping
+    public AjaxResult edit(@Validated @RequestBody AssessRegulationClause clause)
+    {
+        clause.setUpdateBy(getUsername());
+        return toAjax(clauseService.updateClause(clause));
+    }
+
+    /**
+     * 删除综测条款
+     */
+    @PreAuthorize("@ss.hasPermi('assess:clause:remove')")
+    @Log(title = "条款管理", businessType = BusinessType.DELETE)
+    @DeleteMapping("/{clauseIds}")
+    public AjaxResult remove(@PathVariable Long[] clauseIds)
+    {
+        return toAjax(clauseService.deleteClauseByIds(clauseIds));
+    }
+}

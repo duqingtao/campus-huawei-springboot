@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.assess.mapper.AssessDeclarationMapper">
+
+	<resultMap type="com.ruoyi.assess.domain.AssessDeclaration" id="AssessDeclarationResult">
+		<id     property="declarationId"   column="declaration_id"   />
+		<result property="declarationNo"   column="declaration_no"   />
+		<result property="regulationId"    column="regulation_id"    />
+		<result property="userId"          column="user_id"          />
+		<result property="studentName"     column="student_name"     />
+		<result property="className"       column="class_name"       />
+		<result property="academicYear"    column="academic_year"    />
+		<result property="semester"        column="semester"         />
+		<result property="totalScore"      column="total_score"      />
+		<result property="status"          column="status"           />
+		<result property="submitTime"      column="submit_time"      />
+		<result property="reviewUserId"    column="review_user_id"   />
+		<result property="reviewTime"      column="review_time"      />
+		<result property="reviewColor"     column="review_color"     />
+		<result property="reviewComment"   column="review_comment"   />
+		<result property="createBy"        column="create_by"        />
+		<result property="createTime"      column="create_time"      />
+		<result property="updateBy"        column="update_by"        />
+		<result property="updateTime"      column="update_time"      />
+		<result property="delFlag"         column="del_flag"         />
+		<result property="remark"          column="remark"           />
+	</resultMap>
+
+	<sql id="selectDeclarationVo">
+        select d.declaration_id, d.declaration_no, d.regulation_id, d.user_id,
+               d.student_name, d.class_name, d.academic_year, d.semester,
+               d.total_score, d.status, d.submit_time, d.review_user_id, d.review_time,
+               d.review_color, d.review_comment,
+               d.create_by, d.create_time, d.update_by, d.update_time, d.del_flag, d.remark
+        from assess_declaration d
+    </sql>
+
+	<select id="selectDeclarationList" parameterType="com.ruoyi.assess.domain.AssessDeclaration" resultMap="AssessDeclarationResult">
+		<include refid="selectDeclarationVo"/>
+		<where>
+			d.del_flag = '0'
+			<if test="declarationNo != null and declarationNo != ''">
+				AND d.declaration_no like concat('%', #{declarationNo}, '%')
+			</if>
+			<if test="regulationId != null">
+				AND d.regulation_id = #{regulationId}
+			</if>
+			<if test="userId != null">
+				AND d.user_id = #{userId}
+			</if>
+			<if test="academicYear != null and academicYear != ''">
+				AND d.academic_year = #{academicYear}
+			</if>
+			<if test="semester != null and semester != ''">
+				AND d.semester = #{semester}
+			</if>
+			<if test="status != null and status != ''">
+				AND d.status = #{status}
+			</if>
+			<if test="deptId != null">
+				AND exists (select 1 from sys_user u where u.user_id = d.user_id and u.dept_id = #{deptId})
+			</if>
+		</where>
+		order by d.declaration_id desc
+	</select>
+
+	<select id="selectDeclarationById" parameterType="Long" resultMap="AssessDeclarationResult">
+		<include refid="selectDeclarationVo"/>
+		where d.declaration_id = #{declarationId} and d.del_flag = '0'
+	</select>
+
+	<insert id="insertDeclaration" parameterType="com.ruoyi.assess.domain.AssessDeclaration" useGeneratedKeys="true" keyProperty="declarationId">
+		insert into assess_declaration
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="declarationNo != null and declarationNo != ''">declaration_no,</if>
+			<if test="regulationId != null">regulation_id,</if>
+			<if test="userId != null">user_id,</if>
+			<if test="studentName != null and studentName != ''">student_name,</if>
+			<if test="className != null and className != ''">class_name,</if>
+			<if test="academicYear != null and academicYear != ''">academic_year,</if>
+			<if test="semester != null and semester != ''">semester,</if>
+			<if test="totalScore != null">total_score,</if>
+			<if test="status != null and status != ''">status,</if>
+			<if test="submitTime != null">submit_time,</if>
+			<if test="reviewColor != null and reviewColor != ''">review_color,</if>
+			<if test="reviewComment != null and reviewComment != ''">review_comment,</if>
+			<if test="createBy != null and createBy != ''">create_by,</if>
+			<if test="remark != null and remark != ''">remark,</if>
+			create_time,
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="declarationNo != null and declarationNo != ''">#{declarationNo},</if>
+			<if test="regulationId != null">#{regulationId},</if>
+			<if test="userId != null">#{userId},</if>
+			<if test="studentName != null and studentName != ''">#{studentName},</if>
+			<if test="className != null and className != ''">#{className},</if>
+			<if test="academicYear != null and academicYear != ''">#{academicYear},</if>
+			<if test="semester != null and semester != ''">#{semester},</if>
+			<if test="totalScore != null">#{totalScore},</if>
+			<if test="status != null and status != ''">#{status},</if>
+			<if test="submitTime != null">submit_time,</if>
+			<if test="reviewColor != null and reviewColor != ''">#{reviewColor},</if>
+			<if test="reviewComment != null and reviewComment != ''">#{reviewComment},</if>
+			<if test="createBy != null and createBy != ''">#{createBy},</if>
+			<if test="remark != null and remark != ''">#{remark},</if>
+			sysdate(),
+		</trim>
+	</insert>
+
+	<update id="updateDeclaration" parameterType="com.ruoyi.assess.domain.AssessDeclaration">
+		update assess_declaration
+		<set>
+			<if test="declarationNo != null and declarationNo != ''">declaration_no = #{declarationNo},</if>
+			<if test="regulationId != null">regulation_id = #{regulationId},</if>
+			<if test="userId != null">user_id = #{userId},</if>
+			<if test="studentName != null and studentName != ''">student_name = #{studentName},</if>
+			<if test="className != null and className != ''">class_name = #{className},</if>
+			<if test="academicYear != null and academicYear != ''">academic_year = #{academicYear},</if>
+			<if test="semester != null and semester != ''">semester = #{semester},</if>
+			<if test="totalScore != null">total_score = #{totalScore},</if>
+			<if test="status != null and status != ''">status = #{status},</if>
+			<if test="submitTime != null">submit_time = #{submitTime},</if>
+			<if test="reviewUserId != null">review_user_id = #{reviewUserId},</if>
+			<if test="reviewTime != null">review_time = #{reviewTime},</if>
+			<if test="reviewColor != null and reviewColor != ''">review_color = #{reviewColor},</if>
+			<if test="reviewComment != null">review_comment = #{reviewComment},</if>
+			<if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+			<if test="remark != null">remark = #{remark},</if>
+			update_time = sysdate(),
+		</set>
+		where declaration_id = #{declarationId}
+	</update>
+
+	<update id="deleteDeclarationByIds" parameterType="Long">
+		update assess_declaration set del_flag = '2' where declaration_id in
+		<foreach item="declarationId" collection="array" open="(" separator="," close=")">
+			#{declarationId}
+		</foreach>
+	</update>
+
+	<select id="selectMaxDeclarationNoToday" parameterType="String" resultType="String">
+		select max(declaration_no) from assess_declaration
+		where declaration_no like #{prefix}
+	</select>
+
+</mapper>

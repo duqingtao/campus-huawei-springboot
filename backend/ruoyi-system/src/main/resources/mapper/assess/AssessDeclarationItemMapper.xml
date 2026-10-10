@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.assess.mapper.AssessDeclarationItemMapper">
+
+	<resultMap type="com.ruoyi.assess.domain.AssessDeclarationItem" id="AssessDeclarationItemResult">
+		<id     property="itemId"              column="item_id"              />
+		<result property="declarationId"       column="declaration_id"       />
+		<result property="materialId"          column="material_id"          />
+		<result property="clauseId"            column="clause_id"            />
+		<result property="suggestedScore"      column="suggested_score"      />
+		<result property="ruleAdjustedScore"   column="rule_adjusted_score"  />
+		<result property="finalScore"          column="final_score"          />
+		<result property="evidenceClauseNo"    column="evidence_clause_no"   />
+		<result property="evidenceClauseText"  column="evidence_clause_text" />
+		<result property="evidenceConfidence"  column="evidence_confidence"  />
+		<result property="matchReason"         column="match_reason"         />
+		<result property="matchStatus"         column="match_status"         />
+		<result property="ruleCheckResult"     column="rule_check_result"    />
+		<result property="createBy"            column="create_by"            />
+		<result property="createTime"          column="create_time"          />
+		<result property="updateBy"            column="update_by"            />
+		<result property="updateTime"          column="update_time"          />
+		<result property="delFlag"             column="del_flag"             />
+	</resultMap>
+
+	<resultMap type="com.ruoyi.assess.domain.AssessDeclarationItem" id="AssessDeclarationItemExtResult" extends="AssessDeclarationItemResult">
+		<result property="materialName"  column="material_name"  />
+		<result property="materialType"  column="material_type"  />
+		<result property="clauseNo"      column="clause_no"      />
+		<result property="clauseTitle"   column="clause_title"   />
+		<result property="maxScore"      column="max_score"      />
+		<result property="clauseType"    column="clause_type"    />
+	</resultMap>
+
+	<sql id="selectItemVo">
+        select i.item_id, i.declaration_id, i.material_id, i.clause_id,
+               i.suggested_score, i.rule_adjusted_score, i.final_score,
+               i.evidence_clause_no, i.evidence_clause_text, i.evidence_confidence,
+               i.match_reason, i.match_status, i.rule_check_result,
+               i.create_by, i.create_time, i.update_by, i.update_time, i.del_flag
+        from assess_declaration_item i
+    </sql>
+
+	<select id="selectItemByDeclarationId" parameterType="Long" resultMap="AssessDeclarationItemExtResult">
+		select i.item_id, i.declaration_id, i.material_id, i.clause_id,
+               i.suggested_score, i.rule_adjusted_score, i.final_score,
+               i.evidence_clause_no, i.evidence_clause_text, i.evidence_confidence,
+               i.match_reason, i.match_status, i.rule_check_result,
+               i.create_by, i.create_time, i.update_by, i.update_time, i.del_flag,
+               m.material_name, m.material_type,
+               c.clause_no, c.clause_title, c.max_score, c.clause_type
+        from assess_declaration_item i
+        left join assess_material m on i.material_id = m.material_id
+        left join assess_regulation_clause c on i.clause_id = c.clause_id
+        where i.declaration_id = #{declarationId} and i.del_flag = '0'
+        order by i.item_id asc
+	</select>
+
+	<select id="selectItemById" parameterType="Long" resultMap="AssessDeclarationItemExtResult">
+		select i.item_id, i.declaration_id, i.material_id, i.clause_id,
+               i.suggested_score, i.rule_adjusted_score, i.final_score,
+               i.evidence_clause_no, i.evidence_clause_text, i.evidence_confidence,
+               i.match_reason, i.match_status, i.rule_check_result,
+               i.create_by, i.create_time, i.update_by, i.update_time, i.del_flag,
+               m.material_name, m.material_type,
+               c.clause_no, c.clause_title, c.max_score, c.clause_type
+        from assess_declaration_item i
+        left join assess_material m on i.material_id = m.material_id
+        left join assess_regulation_clause c on i.clause_id = c.clause_id
+        where i.item_id = #{itemId} and i.del_flag = '0'
+	</select>
+
+	<insert id="insertItem" parameterType="com.ruoyi.assess.domain.AssessDeclarationItem" useGeneratedKeys="true" keyProperty="itemId">
+		insert into assess_declaration_item
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="declarationId != null">declaration_id,</if>
+			<if test="materialId != null">material_id,</if>
+			<if test="clauseId != null">clause_id,</if>
+			<if test="suggestedScore != null">suggested_score,</if>
+			<if test="ruleAdjustedScore != null">rule_adjusted_score,</if>
+			<if test="finalScore != null">final_score,</if>
+			<if test="evidenceClauseNo != null and evidenceClauseNo != ''">evidence_clause_no,</if>
+			<if test="evidenceClauseText != null">evidence_clause_text,</if>
+			<if test="evidenceConfidence != null">evidence_confidence,</if>
+			<if test="matchReason != null and matchReason != ''">match_reason,</if>
+			<if test="matchStatus != null and matchStatus != ''">match_status,</if>
+			<if test="ruleCheckResult != null">rule_check_result,</if>
+			<if test="createBy != null and createBy != ''">create_by,</if>
+			create_time,
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="declarationId != null">#{declarationId},</if>
+			<if test="materialId != null">#{materialId},</if>
+			<if test="clauseId != null">#{clauseId},</if>
+			<if test="suggestedScore != null">#{suggestedScore},</if>
+			<if test="ruleAdjustedScore != null">#{ruleAdjustedScore},</if>
+			<if test="finalScore != null">#{finalScore},</if>
+			<if test="evidenceClauseNo != null and evidenceClauseNo != ''">#{evidenceClauseNo},</if>
+			<if test="evidenceClauseText != null">#{evidenceClauseText},</if>
+			<if test="evidenceConfidence != null">#{evidenceConfidence},</if>
+			<if test="matchReason != null and matchReason != ''">#{matchReason},</if>
+			<if test="matchStatus != null and matchStatus != ''">#{matchStatus},</if>
+			<if test="ruleCheckResult != null">#{ruleCheckResult},</if>
+			<if test="createBy != null and createBy != ''">#{createBy},</if>
+			sysdate(),
+		</trim>
+	</insert>
+
+	<insert id="batchInsertItem" parameterType="java.util.List">
+		insert into assess_declaration_item
+		(declaration_id, material_id, clause_id, match_status, create_by, create_time)
+		values
+		<foreach item="item" collection="list" separator=",">
+			(#{item.declarationId}, #{item.materialId}, #{item.clauseId}, #{item.matchStatus}, #{item.createBy}, sysdate())
+		</foreach>
+	</insert>
+
+	<update id="updateItem" parameterType="com.ruoyi.assess.domain.AssessDeclarationItem">
+		update assess_declaration_item
+		<set>
+			<if test="declarationId != null">declaration_id = #{declarationId},</if>
+			<if test="materialId != null">material_id = #{materialId},</if>
+			<if test="clauseId != null">clause_id = #{clauseId},</if>
+			<if test="suggestedScore != null">suggested_score = #{suggestedScore},</if>
+			<if test="ruleAdjustedScore != null">rule_adjusted_score = #{ruleAdjustedScore},</if>
+			<if test="finalScore != null">final_score = #{finalScore},</if>
+			<if test="evidenceClauseNo != null">evidence_clause_no = #{evidenceClauseNo},</if>
+			<if test="evidenceClauseText != null">evidence_clause_text = #{evidenceClauseText},</if>
+			<if test="evidenceConfidence != null">evidence_confidence = #{evidenceConfidence},</if>
+			<if test="matchReason != null">match_reason = #{matchReason},</if>
+			<if test="matchStatus != null and matchStatus != ''">match_status = #{matchStatus},</if>
+			<if test="ruleCheckResult != null">rule_check_result = #{ruleCheckResult},</if>
+			<if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+			update_time = sysdate(),
+		</set>
+		where item_id = #{itemId}
+	</update>
+
+	<update id="deleteItemByIds" parameterType="Long">
+		update assess_declaration_item set del_flag = '2' where item_id in
+		<foreach item="itemId" collection="array" open="(" separator="," close=")">
+			#{itemId}
+		</foreach>
+	</update>
+
+	<update id="deleteItemByDeclarationId" parameterType="Long">
+		update assess_declaration_item set del_flag = '2'
+		where declaration_id = #{declarationId} and del_flag = '0'
+	</update>
+
+	<select id="selectMaterialFieldValue" resultType="String">
+		select field_value from assess_material_field
+		where material_id = #{materialId} and field_key = #{fieldKey} and del_flag = '0'
+		limit 1
+	</select>
+
+</mapper>
