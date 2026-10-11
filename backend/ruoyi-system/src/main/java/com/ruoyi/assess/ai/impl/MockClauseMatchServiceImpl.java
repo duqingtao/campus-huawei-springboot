@@ -6,6 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import com.ruoyi.assess.ai.ClauseMatchService;
 import com.ruoyi.assess.ai.dto.MatchRequest;
 import com.ruoyi.assess.ai.dto.MatchResponse;
@@ -23,6 +24,7 @@ import com.ruoyi.common.utils.StringUtils;
  *
  * @author ruoyi
  */
+@ConditionalOnProperty(prefix = "assess.ai", name = "enabled", havingValue = "false", matchIfMissing = true)
 @Service
 public class MockClauseMatchServiceImpl implements ClauseMatchService
 {

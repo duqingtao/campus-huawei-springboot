@@ -142,3 +142,17 @@ xss:
   excludes: /system/notice
   # 匹配链接
   urlPatterns: /system/*,/monitor/*,/tool/*
+
+# 综测AI配置
+assess:
+  ai:
+    # AI总开关(false=降级走Mock实现，不调大模型)
+    enabled: true
+    # MaaS基础地址(OpenAI兼容协议)
+    base-url: https://api.modelarts-maas.com/v1
+    # API Key(请自行填入，禁止硬编码在代码中)
+    api-key: "Kl9OLNMFfOYOy4TtHR-s4xqiCYNWaI-9p58FNyVCcalJYBPNUHZFN_hNm2No_xY3gIKqPgMLz1UKZY1BFeqzWw"
+    # 文本模型(条款匹配/字段抽取/驳回意见草稿)
+    model: "qwen2.5-vl-72b"
+    # 视觉模型(图片OCR/PDF扫描件识别)
+    vlm-model: "qwen2.5-vl-72b"

@@ -2,7 +2,7 @@
 
 > 大学生综合素质测评加分智能认定系统 — MVP 设计草案
 >
-> 约定：后端若依 RuoYi（Spring Boot + MyBatis），前端 Vue2 + Element UI，数据库 MySQL，AI 服务华为云盘古大模型 MaaS + OCR。
+> 约定：后端若依 RuoYi（Spring Boot + MyBatis），前端 Vue2 + Element UI，数据库 MySQL，AI 服务华为云MaaS外接qwen2.5-vl-72b大模型 + OCR。
 
 ---
 

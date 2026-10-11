@@ -1,6 +1,9 @@
 package com.ruoyi.assess.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,7 +13,13 @@ import com.ruoyi.common.core.domain.model.LoginUser;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.file.FileUploadUtils;
+import com.ruoyi.assess.ai.MaterialOcrService;
+import com.ruoyi.assess.ai.FieldExtractService;
+import com.ruoyi.assess.ai.dto.MaterialFieldDto;
+import com.ruoyi.assess.ai.dto.OcrResult;
 import com.ruoyi.assess.domain.AssessMaterial;
+import com.ruoyi.assess.domain.AssessMaterialField;
+import com.ruoyi.assess.mapper.AssessMaterialFieldMapper;
 import com.ruoyi.assess.mapper.AssessMaterialMapper;
 import com.ruoyi.assess.service.IAssessMaterialService;
 
@@ -22,8 +31,19 @@ import com.ruoyi.assess.service.IAssessMaterialService;
 @Service
 public class AssessMaterialServiceImpl implements IAssessMaterialService
 {
+    private static final Logger log = LoggerFactory.getLogger(AssessMaterialServiceImpl.class);
+
     @Autowired
     private AssessMaterialMapper materialMapper;
+
+    @Autowired
+    private AssessMaterialFieldMapper materialFieldMapper;
+
+    @Autowired
+    private MaterialOcrService materialOcrService;
+
+    @Autowired
+    private FieldExtractService fieldExtractService;
 
     /**
      * 查询综测材料列表（含数据隔离）
@@ -139,7 +159,9 @@ public class AssessMaterialServiceImpl implements IAssessMaterialService
     }
 
     /**
-     * 重新识别：重置OCR状态和抽取状态
+     * 重新识别：重置OCR状态和抽取状态后，同步触发OCR → 字段抽取
+     * <p>
+     * 触发失败只记remark，不影响状态重置本身，不抛500。
      */
     @Override
     public int reprocessMaterial(Long materialId, String username)
@@ -150,12 +172,119 @@ public class AssessMaterialServiceImpl implements IAssessMaterialService
             throw new ServiceException("材料不存在或已被删除");
         }
 
-        AssessMaterial update = new AssessMaterial();
-        update.setMaterialId(materialId);
-        update.setOcrStatus("0");
-        update.setOcrText(null);
-        update.setExtractStatus("0");
-        update.setUpdateBy(username);
-        return materialMapper.reprocessMaterial(update);
+        // Step 1: 重置状态(原有逻辑)
+        AssessMaterial reset = new AssessMaterial();
+        reset.setMaterialId(materialId);
+        reset.setOcrStatus("0");
+        reset.setOcrText(null);
+        reset.setExtractStatus("0");
+        reset.setUpdateBy(username);
+        materialMapper.reprocessMaterial(reset);
+
+        // Step 2: 同步触发OCR → 字段抽取
+        // 触发失败只记remark，不影响状态重置本身
+        try
+        {
+            triggerOcrAndExtract(material, username);
+        }
+        catch (Exception e)
+        {
+            log.error("材料[{}]OCR/字段抽取触发异常，不影响状态重置", materialId, e);
+            AssessMaterial failUpdate = new AssessMaterial();
+            failUpdate.setMaterialId(materialId);
+            failUpdate.setOcrStatus("3");
+            failUpdate.setExtractStatus("3");
+            failUpdate.setRemark("OCR/抽取触发异常：" + e.getMessage());
+            failUpdate.setUpdateBy(username);
+            materialMapper.updateMaterial(failUpdate);
+        }
+
+        return 1;
+    }
+
+    /**
+     * 同步执行OCR → 字段抽取链路
+     */
+    private void triggerOcrAndExtract(AssessMaterial material, String username)
+    {
+        Long materialId = material.getMaterialId();
+
+        // ── OCR ──
+        AssessMaterial ocrUpdate = new AssessMaterial();
+        ocrUpdate.setMaterialId(materialId);
+        ocrUpdate.setOcrStatus("1");
+        ocrUpdate.setUpdateBy(username);
+        materialMapper.updateMaterial(ocrUpdate);
+
+        OcrResult ocrResult = materialOcrService.processOcr(material);
+
+        if (ocrResult == null || !ocrResult.isSuccess())
+        {
+            String errorMsg = ocrResult != null ? ocrResult.getErrorMessage() : "OCR返回null";
+            log.warn("材料[{}]OCR失败: {}", materialId, errorMsg);
+            AssessMaterial failUpdate = new AssessMaterial();
+            failUpdate.setMaterialId(materialId);
+            failUpdate.setOcrStatus("3");
+            failUpdate.setRemark("OCR失败：" + errorMsg);
+            failUpdate.setUpdateBy(username);
+            materialMapper.updateMaterial(failUpdate);
+            return;
+        }
+
+        // OCR成功：写ocr_text、ocr_status='2'
+        AssessMaterial ocrSuccess = new AssessMaterial();
+        ocrSuccess.setMaterialId(materialId);
+        ocrSuccess.setOcrStatus("2");
+        ocrSuccess.setOcrText(ocrResult.getOcrText());
+        ocrSuccess.setUpdateBy(username);
+        materialMapper.updateMaterial(ocrSuccess);
+        log.info("材料[{}]OCR成功，文本长度={}", materialId, ocrResult.getOcrText().length());
+
+        // ── 字段抽取 ──
+        AssessMaterial extractUpdate = new AssessMaterial();
+        extractUpdate.setMaterialId(materialId);
+        extractUpdate.setExtractStatus("1");
+        extractUpdate.setUpdateBy(username);
+        materialMapper.updateMaterial(extractUpdate);
+
+        List<MaterialFieldDto> fields = fieldExtractService.extractFields(
+                ocrResult.getOcrText(), material.getMaterialType());
+
+        if (fields == null || fields.isEmpty())
+        {
+            log.info("材料[{}]字段抽取结果为空", materialId);
+            AssessMaterial emptyExtract = new AssessMaterial();
+            emptyExtract.setMaterialId(materialId);
+            emptyExtract.setExtractStatus("3");
+            emptyExtract.setRemark("字段抽取结果为空");
+            emptyExtract.setUpdateBy(username);
+            materialMapper.updateMaterial(emptyExtract);
+            return;
+        }
+
+        // 先删旧字段再插新
+        materialFieldMapper.deleteFieldByMaterialId(materialId);
+
+        List<AssessMaterialField> fieldEntities = new ArrayList<>();
+        for (MaterialFieldDto dto : fields)
+        {
+            AssessMaterialField field = new AssessMaterialField();
+            field.setMaterialId(materialId);
+            field.setFieldKey(dto.getFieldKey());
+            field.setFieldValue(dto.getFieldValue());
+            field.setFieldType(dto.getFieldType());
+            field.setConfidence(dto.getConfidence());
+            field.setCreateBy(username);
+            fieldEntities.add(field);
+        }
+        materialFieldMapper.batchInsertField(fieldEntities);
+
+        // 抽取成功
+        AssessMaterial extractSuccess = new AssessMaterial();
+        extractSuccess.setMaterialId(materialId);
+        extractSuccess.setExtractStatus("2");
+        extractSuccess.setUpdateBy(username);
+        materialMapper.updateMaterial(extractSuccess);
+        log.info("材料[{}]字段抽取成功，共{}个字段", materialId, fields.size());
     }
 }

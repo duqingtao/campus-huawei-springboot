@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.assess.mapper.AssessMaterialFieldMapper">
+
+	<resultMap type="com.ruoyi.assess.domain.AssessMaterialField" id="AssessMaterialFieldResult">
+		<id     property="fieldId"      column="field_id"      />
+		<result property="materialId"   column="material_id"   />
+		<result property="fieldKey"     column="field_key"     />
+		<result property="fieldValue"   column="field_value"   />
+		<result property="fieldType"    column="field_type"    />
+		<result property="confidence"   column="confidence"    />
+		<result property="createBy"     column="create_by"     />
+		<result property="createTime"   column="create_time"   />
+		<result property="updateBy"     column="update_by"     />
+		<result property="updateTime"   column="update_time"   />
+		<result property="delFlag"      column="del_flag"      />
+	</resultMap>
+
+	<sql id="selectFieldVo">
+        select field_id, material_id, field_key, field_value, field_type, confidence,
+               create_by, create_time, update_by, update_time, del_flag
+        from assess_material_field
+    </sql>
+
+	<select id="selectFieldByMaterialId" parameterType="Long" resultMap="AssessMaterialFieldResult">
+		<include refid="selectFieldVo"/>
+		where material_id = #{materialId} and del_flag = '0'
+		order by field_id
+	</select>
+
+	<update id="deleteFieldByMaterialId" parameterType="Long">
+		update assess_material_field set del_flag = '2', update_time = sysdate()
+		where material_id = #{materialId} and del_flag = '0'
+	</update>
+
+	<insert id="batchInsertField" parameterType="java.util.List">
+		insert into assess_material_field
+		(material_id, field_key, field_value, field_type, confidence, create_by, create_time, del_flag)
+		values
+		<foreach item="field" collection="list" separator=",">
+			(#{field.materialId}, #{field.fieldKey}, #{field.fieldValue}, #{field.fieldType},
+			 #{field.confidence}, #{field.createBy}, sysdate(), '0')
+		</foreach>
+	</insert>
+
+</mapper>
