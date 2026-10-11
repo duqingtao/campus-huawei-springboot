@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.assess.mapper.AssessStatsMapper">
+
+	<resultMap type="com.ruoyi.assess.domain.AssessStatsOverview" id="AssessStatsOverviewResult">
+		<result property="studentCount"   column="studentCount"   />
+		<result property="pendingCount"   column="pendingCount"   />
+		<result property="reviewingCount" column="reviewingCount" />
+		<result property="passedCount"    column="passedCount"    />
+		<result property="rejectedCount"  column="rejectedCount"  />
+		<result property="avgScore"       column="avgScore"       />
+	</resultMap>
+
+	<resultMap type="com.ruoyi.assess.domain.AssessStatsStudent" id="AssessStatsStudentResult">
+		<id     property="declarationId"  column="declaration_id"  />
+		<result property="declarationNo"  column="declaration_no"  />
+		<result property="studentName"    column="student_name"    />
+		<result property="studentNo"      column="student_no"      />
+		<result property="className"      column="class_name"      />
+		<result property="academicYear"   column="academic_year"   />
+		<result property="semester"       column="semester"        />
+		<result property="status"         column="status"          />
+		<result property="totalScore"     column="total_score"     />
+	</resultMap>
+
+	<!-- 班级概览统计：条件聚合，单条返回 -->
+	<select id="selectOverview" resultMap="AssessStatsOverviewResult">
+		SELECT
+			<!-- 学生数：sys_user 关联 sys_role 筛 assess_student -->
+			(
+				SELECT COUNT(1) FROM sys_user u
+				INNER JOIN sys_user_role ur ON u.user_id = ur.user_id
+				INNER JOIN sys_role r ON ur.role_id = r.role_id
+				WHERE u.del_flag = '0' AND u.status = '0' AND r.role_key = 'assess_student'
+				<if test="deptId != null">
+					AND u.dept_id = #{deptId}
+				</if>
+			) AS studentCount,
+			<!-- 待审：status=1(已提交未审，与审核看板一致) -->
+			COUNT(CASE WHEN d.status = '1' THEN 1 END) AS pendingCount,
+			<!-- 审核中：status=2(预留) -->
+			COUNT(CASE WHEN d.status = '2' THEN 1 END) AS reviewingCount,
+			<!-- 通过：status=3部分通过/4全部通过 -->
+			COUNT(CASE WHEN d.status IN ('3','4') THEN 1 END) AS passedCount,
+			<!-- 驳回：status=5 -->
+			COUNT(CASE WHEN d.status = '5' THEN 1 END) AS rejectedCount,
+			<!-- 平均分：排除草稿(status!='0')，COALESCE兜底0 -->
+			COALESCE(AVG(CASE WHEN d.status != '0' THEN d.total_score END), 0) AS avgScore
+		FROM assess_declaration d
+		WHERE d.del_flag = '0'
+		<if test="deptId != null">
+			AND EXISTS(SELECT 1 FROM sys_user u WHERE u.user_id = d.user_id AND u.dept_id = #{deptId})
+		</if>
+	</select>
+
+	<!-- 学生申报明细列表 -->
+	<select id="selectStudentList" parameterType="com.ruoyi.assess.domain.AssessStatsStudent" resultMap="AssessStatsStudentResult">
+		SELECT d.declaration_id, d.declaration_no, d.student_name,
+		       u.user_name AS student_no,
+		       d.class_name, d.academic_year, d.semester,
+		       d.status, d.total_score
+		FROM assess_declaration d
+		LEFT JOIN sys_user u ON d.user_id = u.user_id
+		<where>
+			d.del_flag = '0'
+			<if test="deptId != null">
+				AND u.dept_id = #{deptId}
+			</if>
+			<if test="academicYear != null and academicYear != ''">
+				AND d.academic_year = #{academicYear}
+			</if>
+			<if test="semester != null and semester != ''">
+				AND d.semester = #{semester}
+			</if>
+			<if test="status != null and status != ''">
+				AND d.status = #{status}
+			</if>
+			<if test="studentName != null and studentName != ''">
+				AND d.student_name like concat('%', #{studentName}, '%')
+			</if>
+		</where>
+		order by d.declaration_id desc
+	</select>
+
+</mapper>
