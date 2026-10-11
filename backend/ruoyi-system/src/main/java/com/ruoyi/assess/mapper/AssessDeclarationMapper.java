@@ -1,6 +1,7 @@
 package com.ruoyi.assess.mapper;
 
 import java.util.List;
+import java.util.Map;
 import com.ruoyi.assess.domain.AssessDeclaration;
 
 /**
@@ -42,4 +43,12 @@ public interface AssessDeclarationMapper
      * @return 最大单号
      */
     public String selectMaxDeclarationNoToday(String prefix);
+
+    /**
+     * 审核统计：按review_color分组统计某审核人审过的申报单数量
+     *
+     * @param reviewUserId 审核人用户ID
+     * @return List of Map: {reviewColor, count}
+     */
+    public List<Map<String, Object>> selectReviewStats(Long reviewUserId);
 }

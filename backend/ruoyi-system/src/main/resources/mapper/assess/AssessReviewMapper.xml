@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.assess.mapper.AssessReviewMapper">
+
+	<resultMap type="com.ruoyi.assess.domain.AssessReview" id="AssessReviewResult">
+		<id     property="reviewId"        column="review_id"        />
+		<result property="declarationId"   column="declaration_id"   />
+		<result property="reviewerId"      column="reviewer_id"      />
+		<result property="reviewerName"    column="reviewer_name"    />
+		<result property="reviewRound"     column="review_round"     />
+		<result property="reviewResult"    column="review_result"    />
+		<result property="reviewScore"     column="review_score"     />
+		<result property="reviewComment"   column="review_comment"   />
+		<result property="reviewTime"      column="review_time"      />
+		<result property="createBy"        column="create_by"        />
+		<result property="createTime"      column="create_time"      />
+		<result property="updateBy"        column="update_by"        />
+		<result property="updateTime"      column="update_time"      />
+		<result property="delFlag"         column="del_flag"         />
+	</resultMap>
+
+	<sql id="selectReviewVo">
+        select review_id, declaration_id, reviewer_id, reviewer_name,
+               review_round, review_result, review_score, review_comment, review_time,
+               create_by, create_time, update_by, update_time, del_flag
+        from assess_review
+    </sql>
+
+	<select id="selectReviewByDeclarationId" parameterType="Long" resultMap="AssessReviewResult">
+		<include refid="selectReviewVo"/>
+		where declaration_id = #{declarationId} and del_flag = '0'
+		order by review_time desc
+	</select>
+
+	<insert id="insertReview" parameterType="com.ruoyi.assess.domain.AssessReview" useGeneratedKeys="true" keyProperty="reviewId">
+		insert into assess_review
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="declarationId != null">declaration_id,</if>
+			<if test="reviewerId != null">reviewer_id,</if>
+			<if test="reviewerName != null and reviewerName != ''">reviewer_name,</if>
+			<if test="reviewRound != null">review_round,</if>
+			<if test="reviewResult != null and reviewResult != ''">review_result,</if>
+			<if test="reviewScore != null">review_score,</if>
+			<if test="reviewComment != null and reviewComment != ''">review_comment,</if>
+			<if test="reviewTime != null">review_time,</if>
+			<if test="createBy != null and createBy != ''">create_by,</if>
+			create_time,
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="declarationId != null">#{declarationId},</if>
+			<if test="reviewerId != null">#{reviewerId},</if>
+			<if test="reviewerName != null and reviewerName != ''">#{reviewerName},</if>
+			<if test="reviewRound != null">#{reviewRound},</if>
+			<if test="reviewResult != null and reviewResult != ''">#{reviewResult},</if>
+			<if test="reviewScore != null">#{reviewScore},</if>
+			<if test="reviewComment != null and reviewComment != ''">#{reviewComment},</if>
+			<if test="reviewTime != null">#{reviewTime},</if>
+			<if test="createBy != null and createBy != ''">#{createBy},</if>
+			sysdate(),
+		</trim>
+	</insert>
+
+	<select id="countByDeclarationId" parameterType="Long" resultType="int">
+		select count(1) from assess_review
+		where declaration_id = #{declarationId} and del_flag = '0'
+	</select>
+
+</mapper>

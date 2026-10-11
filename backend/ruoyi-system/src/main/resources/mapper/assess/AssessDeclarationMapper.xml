@@ -145,4 +145,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		where declaration_no like #{prefix}
 	</select>
 
+
+	<select id="selectReviewStats" parameterType="Long" resultType="java.util.Map">
+		select review_color as reviewColor, count(1) as count
+		from assess_declaration
+		where review_user_id = #{reviewUserId}
+		  and del_flag = '0'
+		  and review_color is not null
+		group by review_color
+	</select>
+
 </mapper>

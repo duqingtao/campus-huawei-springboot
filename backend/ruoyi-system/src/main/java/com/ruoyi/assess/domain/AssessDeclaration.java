@@ -52,8 +52,8 @@ public class AssessDeclaration extends BaseEntity
     @Excel(name = "总分")
     private BigDecimal totalScore;
 
-    /** 状态(0草稿 1已提交 2审核中 3已通过 4已驳回) */
-    @Excel(name = "状态", readConverterExp = "0=草稿,1=已提交,2=审核中,3=已通过,4=已驳回")
+    /** 状态(0草稿 1已提交 2审核中 3部分通过 4全部通过 5已驳回) */
+    @Excel(name = "状态", readConverterExp = "0=草稿,1=已提交,2=审核中,3=部分通过,4=全部通过,5=已驳回")
     private String status;
 
     /** 提交时间 */
