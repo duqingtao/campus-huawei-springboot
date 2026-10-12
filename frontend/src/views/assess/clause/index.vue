@@ -46,6 +46,16 @@
       </el-col>
       <el-col :span="1.5">
         <el-button
+          type="info"
+          plain
+          icon="el-icon-upload"
+          size="mini"
+          @click="handleImport"
+          v-hasPermi="['assess:clause:add']"
+        >导入条款</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
           type="warning"
           plain
           icon="el-icon-download"
@@ -176,12 +186,63 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
+
+    <!-- 导入条款对话框 -->
+    <el-dialog title="导入条款" :visible.sync="importOpen" width="500px" append-to-body>
+      <el-form ref="importForm" :model="importForm" :rules="importRules" label-width="100px">
+        <el-form-item label="所属细则" prop="regulationId">
+          <el-select
+            v-model="importForm.regulationId"
+            placeholder="请选择细则"
+            clearable
+            filterable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in regulationOptions"
+              :key="item.regulationId"
+              :label="item.regulationNo + ' - ' + item.title"
+              :value="item.regulationId"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="上传文件">
+          <el-upload
+            ref="upload"
+            :action="uploadUrl"
+            :headers="uploadHeaders"
+            :data="uploadData"
+            accept=".pdf,.docx,.txt"
+            :auto-upload="false"
+            :limit="1"
+            :on-exceed="handleExceed"
+            :on-success="handleUploadSuccess"
+            :on-error="handleUploadError"
+            :on-change="handleFileChange"
+            :file-list="fileList"
+            drag
+          >
+            <i class="el-icon-upload"></i>
+            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+            <div class="el-upload__tip" slot="tip" style="color: #909399; font-size: 12px;">
+              支持PDF、Word、TXT格式，文件不超过10MB<br/>
+              上传综测细则文件，AI将自动识别并提取条款
+            </div>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" :loading="importLoading" @click="submitImport">确 定</el-button>
+        <el-button @click="cancelImport">取 消</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { listClause, getClause, addClause, updateClause, delClause, clauseTree } from "@/api/assess/clause";
+import { listClause, getClause, addClause, updateClause, delClause, clauseTree, importClause } from "@/api/assess/clause";
 import { listRegulation } from "@/api/assess/regulation";
+import { getToken } from "@/utils/auth";
 
 export default {
   name: "Clause",
@@ -223,8 +284,32 @@ export default {
         clauseTitle: [
           { required: true, message: "条款标题不能为空", trigger: "blur" }
         ]
-      }
+      },
+      // ===== 导入相关 =====
+      importOpen: false,
+      importLoading: false,
+      importForm: {
+        regulationId: undefined
+      },
+      importRules: {
+        regulationId: [
+          { required: true, message: "所属细则不能为空", trigger: "change" }
+        ]
+      },
+      fileList: [],
+      selectedFile: null
     };
+  },
+  computed: {
+    uploadUrl() {
+      return process.env.VUE_APP_BASE_API + "/assess/clause/import";
+    },
+    uploadHeaders() {
+      return { Authorization: "Bearer " + getToken() };
+    },
+    uploadData() {
+      return { regulationId: this.importForm.regulationId };
+    }
   },
   created() {
     this.getRegulationOptions();
@@ -241,13 +326,11 @@ export default {
     getList() {
       this.loading = true;
       if (this.queryParams.regulationId) {
-        // 有细则筛选时用树形接口
         clauseTree(this.queryParams.regulationId).then(response => {
           this.clauseList = response.data;
           this.loading = false;
         });
       } else {
-        // 无细则筛选时用普通列表接口（平铺展示）
         listClause(this.queryParams).then(response => {
           this.clauseList = response.rows;
           this.total = response.total;
@@ -255,16 +338,13 @@ export default {
         });
       }
     },
-    // 条款类型文本映射
     clauseTypeText(type) {
       const map = { "1": "加分项", "2": "减分项", "3": "基础项", "4": "一票否决" };
       return map[type] || type || "-";
     },
-    // 细则筛选切换
     handleRegulationChange() {
       this.getList();
     },
-    // 表单内细则切换时重新加载父条款树
     handleFormRegulationChange(regulationId) {
       if (regulationId) {
         clauseTree(regulationId).then(response => {
@@ -273,15 +353,12 @@ export default {
       } else {
         this.parentClauseOptions = [];
       }
-      // 细则变更时清空父条款
       this.form.parentId = undefined;
     },
-    // 取消按钮
     cancel() {
       this.open = false;
       this.reset();
     },
-    // 表单重置
     reset() {
       this.form = {
         clauseId: undefined,
@@ -298,19 +375,15 @@ export default {
       this.parentClauseOptions = [];
       this.resetForm("form");
     },
-    /** 搜索按钮操作 */
     handleQuery() {
       this.getList();
     },
-    /** 重置按钮操作 */
     resetQuery() {
       this.resetForm("queryForm");
       this.getList();
     },
-    /** 新增按钮操作 */
     handleAdd() {
       this.reset();
-      // 若搜索区已选细则，自动带入
       if (this.queryParams.regulationId) {
         this.form.regulationId = this.queryParams.regulationId;
         this.handleFormRegulationChange(this.form.regulationId);
@@ -318,24 +391,20 @@ export default {
       this.open = true;
       this.title = "新增条款";
     },
-    /** 新增子条款 */
     handleAddChild(row) {
       this.reset();
       this.form.regulationId = row.regulationId;
       this.form.parentId = row.clauseId;
-      // 加载父条款树
       clauseTree(row.regulationId).then(response => {
         this.parentClauseOptions = response.data || [];
       });
       this.open = true;
       this.title = "新增子条款";
     },
-    /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
       getClause(row.clauseId).then(response => {
         this.form = response.data;
-        // 加载父条款树
         if (this.form.regulationId) {
           clauseTree(this.form.regulationId).then(res => {
             this.parentClauseOptions = res.data || [];
@@ -345,7 +414,6 @@ export default {
         this.title = "修改条款";
       });
     },
-    /** 提交按钮 */
     submitForm() {
       this.$refs["form"].validate(valid => {
         if (valid) {
@@ -365,7 +433,6 @@ export default {
         }
       });
     },
-    /** 删除按钮操作 */
     handleDelete(row) {
       this.$modal.confirm('是否确认删除条款"' + row.clauseTitle + '"？\n注意：删除条款将连带删除其下所有子条款！').then(function() {
         return delClause(row.clauseId);
@@ -374,11 +441,69 @@ export default {
         this.$modal.msgSuccess("删除成功");
       }).catch(() => {});
     },
-    /** 导出按钮操作 */
     handleExport() {
       this.download('assess/clause/export', {
         ...this.queryParams
       }, `clause_${new Date().getTime()}.xlsx`);
+    },
+    // ===== 导入条款 =====
+    handleImport() {
+      this.importForm = {
+        regulationId: this.queryParams.regulationId || undefined
+      };
+      this.fileList = [];
+      this.selectedFile = null;
+      this.importOpen = true;
+    },
+    handleFileChange(file) {
+      this.selectedFile = file;
+    },
+    handleExceed() {
+      this.$modal.msgWarning("只能上传一个文件，请先删除已选文件");
+    },
+    submitImport() {
+      this.$refs["importForm"].validate(valid => {
+        if (!valid) return;
+        if (!this.selectedFile) {
+          this.$modal.msgWarning("请先选择要上传的文件");
+          return;
+        }
+        this.importLoading = true;
+        // 手动构建FormData提交
+        const formData = new FormData();
+        formData.append("regulationId", this.importForm.regulationId);
+        formData.append("file", this.selectedFile.raw);
+        importClause(formData).then(response => {
+          this.importLoading = false;
+          this.importOpen = false;
+          this.$modal.msgSuccess(response.msg);
+          // 自动切换到所选细则的树形视图
+          this.queryParams.regulationId = this.importForm.regulationId;
+          this.getList();
+        }).catch(() => {
+          this.importLoading = false;
+        });
+      });
+    },
+    handleUploadSuccess(response) {
+      this.importLoading = false;
+      if (response.code === 200) {
+        this.importOpen = false;
+        this.$modal.msgSuccess(response.msg);
+        this.queryParams.regulationId = this.importForm.regulationId;
+        this.getList();
+      } else {
+        this.$modal.msgError(response.msg);
+      }
+    },
+    handleUploadError() {
+      this.importLoading = false;
+      this.$modal.msgError("上传失败，请检查网络或文件格式");
+    },
+    cancelImport() {
+      this.importOpen = false;
+      this.fileList = [];
+      this.selectedFile = null;
     }
   }
 };

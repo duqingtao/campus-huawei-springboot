@@ -53,27 +53,27 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="ruleList">
+    <el-table v-loading="loading" :data="ruleList" border>
       <el-table-column label="序号" type="index" width="55" align="center" />
-      <el-table-column label="规则ID" prop="ruleId" width="80" align="center" />
+      <el-table-column label="规则ID" prop="ruleId" width="90" align="center" />
       <el-table-column label="规则名称" prop="ruleName" :show-overflow-tooltip="true" />
-      <el-table-column label="规则类型" prop="ruleType" width="100" align="center">
+      <el-table-column label="规则类型" prop="ruleType" width="110" align="center">
         <template slot-scope="scope">
           <el-tag size="mini" :type="ruleTypeTagType(scope.row.ruleType)">{{ ruleTypeText(scope.row.ruleType) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="作用范围" prop="regulationId" width="120" align="center">
+      <el-table-column label="作用范围" prop="regulationId" width="130" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.regulationId ? '指定细则' : '全部' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="优先级" prop="priority" width="80" align="center" />
-      <el-table-column label="状态" prop="status" width="80" align="center">
+      <el-table-column label="优先级" prop="priority" width="90" align="center" />
+      <el-table-column label="状态" prop="status" width="90" align="center">
         <template slot-scope="scope">
           <el-tag :type="scope.row.status === '0' ? 'success' : 'info'">{{ scope.row.status === '0' ? '启用' : '停用' }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="140" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" width="160" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
             size="mini"

@@ -60,27 +60,27 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="declarationList">
+    <el-table v-loading="loading" :data="declarationList" border>
       <el-table-column label="序号" type="index" width="55" align="center" />
-      <el-table-column label="申报ID" prop="declarationId" width="80" align="center" />
-      <el-table-column label="申报单号" prop="declarationNo" width="160" :show-overflow-tooltip="true" />
+      <el-table-column label="申报ID" prop="declarationId" width="90" align="center" />
+      <el-table-column label="申报单号" prop="declarationNo" width="170" :show-overflow-tooltip="true" />
       <el-table-column label="细则标题" prop="regulationTitle" :show-overflow-tooltip="true" />
-      <el-table-column label="总分" prop="totalScore" width="80" align="center">
+      <el-table-column label="总分" prop="totalScore" width="90" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.totalScore != null ? scope.row.totalScore : '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="状态" prop="status" width="100" align="center">
+      <el-table-column label="状态" prop="status" width="110" align="center">
         <template slot-scope="scope">
           <el-tag :type="statusTagType(scope.row.status)">{{ statusText(scope.row.status) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="提交时间" prop="submitTime" width="160" align="center">
+      <el-table-column label="提交时间" prop="submitTime" width="170" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.submitTime ? parseTime(scope.row.submitTime) : '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="240" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" width="260" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
             size="mini"

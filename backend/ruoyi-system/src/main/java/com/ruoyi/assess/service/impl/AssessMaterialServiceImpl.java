@@ -13,6 +13,7 @@ import com.ruoyi.common.core.domain.model.LoginUser;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.file.FileUploadUtils;
+import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.assess.ai.MaterialOcrService;
 import com.ruoyi.assess.ai.FieldExtractService;
 import com.ruoyi.assess.ai.dto.MaterialFieldDto;
@@ -125,6 +126,11 @@ public class AssessMaterialServiceImpl implements IAssessMaterialService
             }
 
             // 文件信息
+            // 材料名称为空时用原始文件名自动填充
+            if (StringUtils.isEmpty(material.getMaterialName()))
+            {
+                material.setMaterialName(originalFilename);
+            }
             material.setFileUrl(fileName);
             material.setFileType(fileType);
             material.setFileSize(file.getSize());

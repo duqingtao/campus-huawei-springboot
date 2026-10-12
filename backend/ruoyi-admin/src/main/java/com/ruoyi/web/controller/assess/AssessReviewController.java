@@ -93,8 +93,10 @@ public class AssessReviewController extends BaseController
     public AjaxResult draftComment(@RequestBody AssessReviewAuditDTO draftDTO)
     {
         String draft = reviewService.draftComment(draftDTO.getDeclarationId());
-        AjaxResult ajax = AjaxResult.success();
-        ajax.put("draftComment", draft);
-        return ajax;
+        return AjaxResult.success("操作成功", draft);
+
+
+
+
     }
 }

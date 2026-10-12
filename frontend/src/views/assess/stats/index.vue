@@ -69,24 +69,24 @@
     </el-row>
 
     <!-- 学生明细分页表格 -->
-    <el-table v-loading="loading" :data="studentList">
+    <el-table v-loading="loading" :data="studentList" border>
       <el-table-column label="序号" type="index" width="55" align="center" />
-      <el-table-column label="学号" prop="studentNo" width="120" align="center" />
+      <el-table-column label="学号" prop="studentNo" width="130" align="center" />
       <el-table-column label="姓名" prop="studentName" width="100" />
-      <el-table-column label="班级" prop="className" width="140" :show-overflow-tooltip="true" />
-      <el-table-column label="申报单号" prop="declarationNo" width="160" :show-overflow-tooltip="true" />
-      <el-table-column label="总分" prop="totalScore" width="80" align="center">
+      <el-table-column label="班级" prop="className" min-width="140" :show-overflow-tooltip="true" />
+      <el-table-column label="申报单号" prop="declarationNo" width="170" :show-overflow-tooltip="true" />
+      <el-table-column label="总分" prop="totalScore" width="90" align="center">
         <template slot-scope="scope">
           <span style="font-weight: bold;">{{ scope.row.totalScore != null ? scope.row.totalScore : '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="学年" prop="academicYear" width="100" align="center" />
-      <el-table-column label="学期" prop="semester" width="80" align="center">
+      <el-table-column label="学年" prop="academicYear" width="110" align="center" />
+      <el-table-column label="学期" prop="semester" width="90" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.semester === '1' ? '第一学期' : '第二学期' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="状态" prop="status" width="100" align="center">
+      <el-table-column label="状态" prop="status" width="110" align="center">
         <template slot-scope="scope">
           <el-tag :type="statusTagType(scope.row.status)">{{ statusText(scope.row.status) }}</el-tag>
         </template>

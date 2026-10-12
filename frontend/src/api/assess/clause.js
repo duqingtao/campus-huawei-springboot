@@ -50,3 +50,15 @@ export function delClause(clauseIds) {
     method: 'delete'
   })
 }
+
+// 导入条款
+export function importClause(data) {
+  return request({
+    url: '/assess/clause/import',
+    method: 'post',
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    },
+    data: data
+  })
+}

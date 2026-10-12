@@ -1,6 +1,7 @@
 package com.ruoyi.assess.service;
 
 import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
 import com.ruoyi.assess.domain.AssessRegulationClause;
 
 /**
@@ -57,4 +58,16 @@ public interface IAssessRegulationClauseService
      * @return 结果
      */
     public int deleteClauseByIds(Long[] clauseIds);
+
+    /**
+     * 导入条款
+     * <p>
+     * 从文件中抽取文本，调用AI识别条款，批量插入数据库。
+     *
+     * @param regulationId 所属细则ID
+     * @param file         上传的文件(PDF/Word/TXT)
+     * @param username     操作人用户名
+     * @return 成功导入的条款数量
+     */
+    public int importClauses(Long regulationId, MultipartFile file, String username);
 }

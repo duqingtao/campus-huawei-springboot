@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
@@ -113,5 +115,35 @@ public class AssessRegulationClauseController extends BaseController
     public AjaxResult remove(@PathVariable Long[] clauseIds)
     {
         return toAjax(clauseService.deleteClauseByIds(clauseIds));
+    }
+
+    /**
+     * 导入条款
+     * <p>
+     * 上传综测细则文件(PDF/Word/TXT)，AI自动识别并提取条款，批量插入数据库。
+     *
+     * @param regulationId 所属细则ID
+     * @param file         上传的文件
+     * @return 导入结果，含成功条数
+     */
+    @PreAuthorize("@ss.hasPermi('assess:clause:add')")
+    @Log(title = "条款管理", businessType = BusinessType.IMPORT)
+    @PostMapping("/import")
+    public AjaxResult importClause(@RequestParam("regulationId") Long regulationId,
+            @RequestParam("file") MultipartFile file)
+    {
+        try
+        {
+            int count = clauseService.importClauses(regulationId, file, getUsername());
+            return AjaxResult.success("成功导入" + count + "条条款", count);
+        }
+        catch (IllegalArgumentException e)
+        {
+            return AjaxResult.error(e.getMessage());
+        }
+        catch (Exception e)
+        {
+            return AjaxResult.error("条款识别失败，请检查文件格式或手动录入");
+        }
     }
 }

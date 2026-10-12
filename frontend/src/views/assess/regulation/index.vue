@@ -56,33 +56,33 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="regulationList">
+    <el-table v-loading="loading" :data="regulationList" border>
       <el-table-column label="序号" type="index" width="55" align="center" />
-      <el-table-column label="细则ID" prop="regulationId" width="80" align="center" />
-      <el-table-column label="细则编号" prop="regulationNo" width="120" :show-overflow-tooltip="true" />
+      <el-table-column label="细则ID" prop="regulationId" width="90" align="center" />
+      <el-table-column label="细则编号" prop="regulationNo" width="130" :show-overflow-tooltip="true" />
       <el-table-column label="细则标题" prop="title" :show-overflow-tooltip="true" />
-      <el-table-column label="版本号" prop="versionNum" width="80" align="center" />
-      <el-table-column label="发布日期" prop="publishDate" width="110" align="center">
+      <el-table-column label="版本号" prop="versionNum" width="90" align="center" />
+      <el-table-column label="发布日期" prop="publishDate" width="120" align="center">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.publishDate, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="生效日期" prop="effectiveDate" width="110" align="center">
+      <el-table-column label="生效日期" prop="effectiveDate" width="120" align="center">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.effectiveDate, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="状态" prop="status" width="90" align="center">
+      <el-table-column label="状态" prop="status" width="100" align="center">
         <template slot-scope="scope">
           <el-tag :type="statusTagType(scope.row.status)">{{ statusText(scope.row.status) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" prop="createTime" width="160" align="center">
+      <el-table-column label="创建时间" prop="createTime" width="170" align="center">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="180" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" width="200" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
             size="mini"

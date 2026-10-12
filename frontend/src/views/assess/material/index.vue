@@ -58,31 +58,31 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="materialList">
+    <el-table v-loading="loading" :data="materialList" border>
       <el-table-column label="序号" type="index" width="55" align="center" />
-      <el-table-column label="材料ID" prop="materialId" width="80" align="center" />
+      <el-table-column label="材料ID" prop="materialId" width="90" align="center" />
       <el-table-column label="文件名" prop="materialName" :show-overflow-tooltip="true" />
-      <el-table-column label="材料类型" prop="materialType" width="100" align="center">
+      <el-table-column label="材料类型" prop="materialType" width="110" align="center">
         <template slot-scope="scope">
           <span>{{ materialTypeText(scope.row.materialType) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="OCR状态" prop="ocrStatus" width="100" align="center">
+      <el-table-column label="OCR状态" prop="ocrStatus" width="110" align="center">
         <template slot-scope="scope">
           <el-tag :type="ocrStatusTagType(scope.row.ocrStatus)">{{ ocrStatusText(scope.row.ocrStatus) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="文件大小" prop="fileSize" width="100" align="center">
+      <el-table-column label="文件大小" prop="fileSize" width="110" align="center">
         <template slot-scope="scope">
           <span>{{ formatFileSize(scope.row.fileSize) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="上传时间" prop="createTime" width="160" align="center">
+      <el-table-column label="上传时间" prop="createTime" width="170" align="center">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="260" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" width="280" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
             size="mini"
@@ -140,7 +140,7 @@
         <el-form-item label="选择文件" prop="file">
           <el-upload
             ref="upload"
-            action="/assess/material"
+            :action="uploadUrl"
             :headers="uploadHeaders"
             name="file"
             :data="{ materialType: form.materialType }"
@@ -261,6 +261,9 @@ export default {
     };
   },
   computed: {
+    uploadUrl() {
+      return process.env.VUE_APP_BASE_API + "/assess/material";
+    },
     uploadHeaders() {
       return { Authorization: "Bearer " + getToken() };
     }

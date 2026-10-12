@@ -15,6 +15,18 @@ const isWhiteList = (path) => {
   return whiteList.some(pattern => isPathMatch(pattern, path))
 }
 
+/**
+ * 根据角色返回默认落地页
+ * 管理员 → 首页；其他角色 → 对应业务页
+ */
+function getRoleDefaultPath(roles) {
+  if (roles.includes('admin')) return '/'
+  if (roles.includes('assess_student')) return '/assess/material'
+  if (roles.includes('assess_committee')) return '/assess/stats'
+  if (roles.includes('assess_counselor')) return '/assess/review'
+  return '/'
+}
+
 router.beforeEach((to, from, next) => {
   NProgress.start()
   if (getToken()) {
@@ -41,6 +53,15 @@ router.beforeEach((to, from, next) => {
           store.dispatch('GenerateRoutes').then(accessRoutes => {
             // 根据roles权限生成可访问的路由表
             router.addRoutes(accessRoutes) // 动态添加可访问路由表
+            // 角色自动跳转：如果目标是首页且非管理员，跳到角色对应业务页
+            if (to.path === "/" || to.path === "/index") {
+              const defaultPath = getRoleDefaultPath(store.getters.roles)
+              if (defaultPath !== '/') {
+                next({ path: defaultPath, replace: true })
+                NProgress.done()
+                return
+              }
+            }
             next({ ...to, replace: true }) // hack方法 确保addRoutes已完成
           })
         }).catch(err => {

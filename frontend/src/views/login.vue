@@ -2,6 +2,7 @@
   <div class="login">
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form">
       <h3 class="title">{{title}}</h3>
+      <p class="subtitle">大学生综合素质测评智能认定系统</p>
       <el-form-item prop="username">
         <el-input
           v-model="loginForm.username"
@@ -53,6 +54,10 @@
           <router-link class="link-type" :to="'/register'">立即注册</router-link>
         </div>
       </el-form-item>
+      <!-- 演示账号提示 -->
+      <div class="demo-tip">
+        演示账号：学生 student02 / 班委 committee01 / 辅导员 counselor01，密码均为 admin123
+      </div>
     </el-form>
     <!--  底部  -->
     <div class="el-login-footer">
@@ -75,8 +80,8 @@ export default {
       footerContent: defaultSettings.footerContent,
       codeUrl: "",
       loginForm: {
-        username: "admin",
-        password: "admin123",
+        username: "",
+        password: "",
         rememberMe: false,
         code: "",
         uuid: ""
@@ -168,9 +173,17 @@ export default {
   background-size: cover;
 }
 .title {
+  margin: 0px auto 10px auto;
+  text-align: center;
+  color: #303133;
+  font-size: 24px;
+  font-weight: 600;
+}
+.subtitle {
   margin: 0px auto 30px auto;
   text-align: center;
-  color: #707070;
+  color: #909399;
+  font-size: 13px;
 }
 
 .login-form {
@@ -219,5 +232,12 @@ export default {
 }
 .login-code-img {
   height: 38px;
+}
+.demo-tip {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: #C0C4CC;
+  line-height: 1.6;
 }
 </style>
