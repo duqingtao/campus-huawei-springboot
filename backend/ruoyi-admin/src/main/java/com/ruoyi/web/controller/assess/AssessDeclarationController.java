@@ -106,7 +106,7 @@ public class AssessDeclarationController extends BaseController
     /**
      * 提交申报单 — 触发AI匹配+规则引擎+定分+汇总
      */
-    @PreAuthorize("@ss.hasPermi('assess:declaration:edit')")
+    @PreAuthorize("@ss.hasPermi('assess:declaration:submit')")
     @Log(title = "提交综测申报单", businessType = BusinessType.UPDATE)
     @PostMapping("/submit/{declarationId}")
     public AjaxResult submit(@PathVariable Long declarationId)

@@ -215,14 +215,14 @@ VALUES (2000, '综测智办', 0, 10, 'assess', NULL, 1, 0, 'M', '0', '0', '', 'e
 
 -- ============ 细则管理（辅导员） ============
 INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
-VALUES (1000, '细则管理', 2000, 1, 'regulation', 'assess/regulation/index', 1, 0, 'C', '0', '0', 'assess:regulation:list', 'documentation', 'admin', sysdate(), '细则菜单');
+VALUES (3000, '细则管理', 2000, 1, 'regulation', 'assess/regulation/index', 1, 0, 'C', '0', '0', 'assess:regulation:list', 'documentation', 'admin', sysdate(), '细则菜单');
 INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
 VALUES
-(1001, '细则查询', 1000, 1, 1, 0, 'F', '0', '0', 'assess:regulation:query',  '#', 'admin', sysdate(), ''),
-(1002, '细则新增', 1000, 2, 1, 0, 'F', '0', '0', 'assess:regulation:add',    '#', 'admin', sysdate(), ''),
-(1003, '细则修改', 1000, 3, 1, 0, 'F', '0', '0', 'assess:regulation:edit',   '#', 'admin', sysdate(), ''),
-(1004, '细则删除', 1000, 4, 1, 0, 'F', '0', '0', 'assess:regulation:remove', '#', 'admin', sysdate(), ''),
-(1005, '细则导出', 1000, 5, 1, 0, 'F', '0', '0', 'assess:regulation:export', '#', 'admin', sysdate(), '');
+(3001, '细则查询', 3000, 1, 1, 0, 'F', '0', '0', 'assess:regulation:query',  '#', 'admin', sysdate(), ''),
+(3002, '细则新增', 3000, 2, 1, 0, 'F', '0', '0', 'assess:regulation:add',    '#', 'admin', sysdate(), ''),
+(3003, '细则修改', 3000, 3, 1, 0, 'F', '0', '0', 'assess:regulation:edit',   '#', 'admin', sysdate(), ''),
+(3004, '细则删除', 3000, 4, 1, 0, 'F', '0', '0', 'assess:regulation:remove', '#', 'admin', sysdate(), ''),
+(3005, '细则导出', 3000, 5, 1, 0, 'F', '0', '0', 'assess:regulation:export', '#', 'admin', sysdate(), '');
 
 -- ============ 条款管理（辅导员） ============
 INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
@@ -269,16 +269,6 @@ VALUES
 (2402, '审核列表', 2400, 2, 1, 0, 'F', '0', '0', 'assess:review:list',   '#', 'admin', sysdate(), ''),
 (2403, '审核操作', 2400, 3, 1, 0, 'F', '0', '0', 'assess:review:edit',   '#', 'admin', sysdate(), '');
 
--- ============ 规则引擎（辅导员） ============
-INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
-VALUES (2500, '规则引擎', 2000, 6, 'rule', 'assess/rule/index', 1, 0, 'C', '0', '0', 'assess:rule:list', 'slider', 'admin', sysdate(), '规则引擎菜单');
-INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
-VALUES
-(2501, '规则查询', 2500, 1, 1, 0, 'F', '0', '0', 'assess:rule:query',  '#', 'admin', sysdate(), ''),
-(2502, '规则列表', 2500, 2, 1, 0, 'F', '0', '0', 'assess:rule:list',   '#', 'admin', sysdate(), ''),
-(2503, '规则新增', 2500, 3, 1, 0, 'F', '0', '0', 'assess:rule:add',    '#', 'admin', sysdate(), ''),
-(2504, '规则修改', 2500, 4, 1, 0, 'F', '0', '0', 'assess:rule:edit',   '#', 'admin', sysdate(), '');
-
 -- ============ 班级统计（班委） ============
 INSERT INTO sys_menu (menu_id, menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
 VALUES (2600, '班级统计', 2000, 7, 'stats', 'assess/stats/index', 1, 0, 'C', '0', '0', 'assess:stats:query', 'chart', 'admin', sysdate(), '班级统计菜单');
@@ -305,14 +295,13 @@ VALUES
 -- 四、角色-菜单映射（sys_role_menu）
 -- ============================================================
 
--- ---- 辅导员(100)：细则管理 + 条款管理 + 审核管理 + 规则引擎 ----
--- 目录 + 细则(6) + 条款(6) + 审核(4) + 规则(5) = 22条
+-- ---- 辅导员(100)：细则管理 + 条款管理 + 审核管理 ----
+-- 目录 + 细则(6) + 条款(6) + 审核(4) = 17条
 INSERT INTO sys_role_menu (role_id, menu_id) VALUES
 (100, 2000),
-(100, 1000), (100, 1001), (100, 1002), (100, 1003), (100, 1004), (100, 1005),
+(100, 3000), (100, 3001), (100, 3002), (100, 3003), (100, 3004), (100, 3005),
 (100, 1100), (100, 1101), (100, 1102), (100, 1103), (100, 1104), (100, 1105),
-(100, 2400), (100, 2401), (100, 2402), (100, 2403),
-(100, 2500), (100, 2501), (100, 2502), (100, 2503), (100, 2504);
+(100, 2400), (100, 2401), (100, 2402), (100, 2403);
 
 -- ---- 学生(101)：材料管理 + 申报管理(增改查删+提交) ----
 -- 目录 + 材料(7: 查询/上传/修改/删除/导出/重新OCR) + 申报(6: 查询/列表/新增/修改/删除/提交) = 15条
