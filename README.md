@@ -64,10 +64,12 @@ sql/       建表与菜单/演示数据脚本
 
 ## 六、演示流程
 
-1. 学生：首页仪表盘 → 上传奖学金证书（自动 OCR）→ 新建申报勾选材料 → 提交
-2. 系统自动：字段抽取 → AI 条款匹配（建议分 + 证据链）→ 规则引擎校验定分
-3. 辅导员：审核管理 → 查看评分明细证据链 → AI 驳回草稿一键生成 → 通过/存疑/驳回
-4. 班委：班级统计 → 概览 / 学生明细 / Excel 导出
+## 六、演示流程
+
+![首页仪表盘](docs/screenshots/dashboard.png)
+![申报详情证据链](docs/screenshots/declaration-evidence.png)
+![条款批量导入预览](docs/screenshots/clause-import-preview.png)
+![审核三态与AI驳回草稿](docs/screenshots/review-dialog.png)
 
 {TODO：此处插入 4 张截图——首页仪表盘 / 申报详情证据链 / 条款导入预览 / 审核三态}
 
