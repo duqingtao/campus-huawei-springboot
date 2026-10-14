@@ -86,6 +86,9 @@ public class AssessDeclaration extends BaseEntity
     /** 查询详情时返回：申报明细列表 */
     private List<AssessDeclarationItem> items;
 
+    /** 细则标题(关联查询) */
+    private String regulationTitle;
+
     public Long getDeclarationId()
     {
         return declarationId;
@@ -264,6 +267,16 @@ public class AssessDeclaration extends BaseEntity
     public void setMaterialIds(List<Long> materialIds)
     {
         this.materialIds = materialIds;
+    }
+
+    public String getRegulationTitle()
+    {
+        return regulationTitle;
+    }
+
+    public void setRegulationTitle(String regulationTitle)
+    {
+        this.regulationTitle = regulationTitle;
     }
 
     public List<AssessDeclarationItem> getItems()

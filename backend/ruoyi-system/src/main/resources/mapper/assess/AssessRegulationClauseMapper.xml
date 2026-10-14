@@ -63,6 +63,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		order by sort_order asc
 	</select>
 
+	<!-- AI匹配专用：只取叶子条款(clause_type='1' 且 parent_id<>0)，排除分类节点 -->
+	<select id="selectLeafClauseByRegulationId" parameterType="Long" resultMap="AssessRegulationClauseResult">
+		<include refid="selectClauseVo"/>
+		where regulation_id = #{regulationId} and del_flag = '0' and clause_type = '1' and parent_id &lt;&gt; 0
+		order by sort_order asc
+	</select>
+
 	<insert id="insertClause" parameterType="com.ruoyi.assess.domain.AssessRegulationClause" useGeneratedKeys="true" keyProperty="clauseId">
 		insert into assess_regulation_clause
 		<trim prefix="(" suffix=")" suffixOverrides=",">

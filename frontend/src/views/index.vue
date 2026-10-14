@@ -1,136 +1,194 @@
 <template>
   <div class="app-container assess-home">
-    <!-- 顶部大标题区 -->
+    <!-- 顶部 hero 渐变区（约 70px，深蓝渐变，左对齐） -->
     <div class="hero-section">
       <h1 class="hero-title">综测智办</h1>
-      <p class="hero-subtitle-main">大学生综合素质测评智能认定系统</p>
-      <p class="hero-subtitle-desc">
-        基于华为云MaaS大模型，实现OCR材料识别、AI条款匹配、规则引擎定分、三级审核全流程自动化
-      </p>
+      <p class="hero-subtitle">大学生综合素质测评智能认定系统</p>
     </div>
 
-    <!-- 角色入口卡片（按权限显隐） -->
-    <el-row :gutter="20" class="role-cards" v-if="hasAnyAccess">
-      <el-col :xs="24" :sm="8" v-hasPermi="['assess:material:list']">
-        <el-card shadow="hover" class="role-card" @click.native="goTo('/assess/material')">
-          <div class="role-card-inner">
-            <div class="role-icon role-icon-student">
-              <i class="el-icon-upload"></i>
-            </div>
-            <h3 class="role-title">学生端</h3>
-            <p class="role-desc">上传证明材料，AI自动识别并计算加分</p>
-            <span class="role-action">进入材料管理 <i class="el-icon-arrow-right"></i></span>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="8" v-hasPermi="['assess:stats:list']">
-        <el-card shadow="hover" class="role-card" @click.native="goTo('/assess/stats')">
-          <div class="role-card-inner">
-            <div class="role-icon role-icon-monitor">
-              <i class="el-icon-data-analysis"></i>
-            </div>
-            <h3 class="role-title">班委端</h3>
-            <p class="role-desc">查看班级统计，导出Excel报表</p>
-            <span class="role-action">进入班级统计 <i class="el-icon-arrow-right"></i></span>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :sm="8" v-hasPermi="['assess:review:list']">
-        <el-card shadow="hover" class="role-card" @click.native="goTo('/assess/review')">
-          <div class="role-card-inner">
-            <div class="role-icon role-icon-reviewer">
-              <i class="el-icon-check"></i>
-            </div>
-            <h3 class="role-title">辅导员端</h3>
-            <p class="role-desc">待审列表，一键审核（通过/存疑/驳回）</p>
-            <span class="role-action">进入审核管理 <i class="el-icon-arrow-right"></i></span>
-          </div>
+    <!-- 数字卡片区 -->
+    <el-row :gutter="16" class="stat-cards" v-loading="loading">
+      <el-col :span="6" v-for="(card, idx) in statCards" :key="idx">
+        <el-card shadow="hover" class="stat-card" @click.native="goTo(card.path)">
+          <div class="stat-value" :style="{ color: card.color }">{{ card.value }}</div>
+          <div class="stat-label">{{ card.label }}</div>
         </el-card>
       </el-col>
     </el-row>
 
-    <!-- 无权限提示 -->
-    <el-empty
-      v-if="!hasAnyAccess"
-      description="您暂无综测智办相关权限，请联系管理员分配角色"
-      :image-size="120"
-      style="margin-bottom: 30px;"
-    />
+    <!-- 最近申报表 -->
+    <el-card shadow="never" class="recent-card">
+      <div slot="header" class="recent-header">
+        <span class="recent-title">最近申报</span>
+      </div>
+      <el-table v-loading="loading" :data="recentList" border size="small">
+        <el-table-column label="申报单号" prop="declarationNo" width="170" :show-overflow-tooltip="true" />
+        <el-table-column label="细则标题" prop="regulationTitle" :show-overflow-tooltip="true" />
+        <el-table-column label="总分" prop="totalScore" width="90" align="center">
+          <template slot-scope="scope">
+            <span style="font-weight: bold;">{{ scope.row.totalScore != null && scope.row.status !== '0' ? scope.row.totalScore : '-' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" prop="status" width="110" align="center">
+          <template slot-scope="scope">
+            <el-tag :type="statusTagType(scope.row.status)">{{ statusText(scope.row.status) }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="提交时间" prop="submitTime" width="170" align="center">
+          <template slot-scope="scope">
+            <span>{{ scope.row.submitTime ? parseTime(scope.row.submitTime) : '-' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" align="center" width="80">
+          <template slot-scope="scope">
+            <el-button size="mini" type="text" icon="el-icon-view" @click="goTo('/assess/declaration')">详情</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
 
-    <!-- 底部核心特性区 -->
-    <div class="features-section">
-      <h2 class="features-heading">核心特性</h2>
-      <el-row :gutter="20" class="feature-cards">
-        <el-col :xs="24" :sm="12" :md="6">
-          <el-card shadow="hover" class="feature-card">
-            <div class="feature-card-inner">
-              <div class="feature-icon">
-                <i class="el-icon-picture-outline"></i>
-              </div>
-              <h4 class="feature-title">OCR智能识别</h4>
-              <p class="feature-desc">支持图片/PDF材料，自动提取关键信息</p>
-            </div>
-          </el-card>
-        </el-col>
-        <el-col :xs="24" :sm="12" :md="6">
-          <el-card shadow="hover" class="feature-card">
-            <div class="feature-card-inner">
-              <div class="feature-icon">
-                <i class="el-icon-magic-stick"></i>
-              </div>
-              <h4 class="feature-title">AI条款匹配</h4>
-              <p class="feature-desc">大模型语义理解，精准匹配综测条款</p>
-            </div>
-          </el-card>
-        </el-col>
-        <el-col :xs="24" :sm="12" :md="6">
-          <el-card shadow="hover" class="feature-card">
-            <div class="feature-card-inner">
-              <div class="feature-icon">
-                <i class="el-icon-set-up"></i>
-              </div>
-              <h4 class="feature-title">规则引擎定分</h4>
-              <p class="feature-desc">cap封顶/mutex互斥/time_window时间窗，确保公平公正</p>
-            </div>
-          </el-card>
-        </el-col>
-        <el-col :xs="24" :sm="12" :md="6">
-          <el-card shadow="hover" class="feature-card">
-            <div class="feature-card-inner">
-              <div class="feature-icon">
-                <i class="el-icon-document-checked"></i>
-              </div>
-              <h4 class="feature-title">全程留痕</h4>
-              <p class="feature-desc">审核记录可追溯，驳回意见AI辅助生成</p>
-            </div>
-          </el-card>
-        </el-col>
-      </el-row>
+    <!-- 快捷操作 -->
+    <div class="quick-actions">
+      <el-button v-for="(action, idx) in quickActions" :key="idx"
+        :type="action.type" :plain="action.plain" :icon="action.icon" size="small"
+        @click="goTo(action.path)">
+        {{ action.label }}
+      </el-button>
     </div>
   </div>
 </template>
 
 <script>
+import { listMaterial } from "@/api/assess/material";
+import { listDeclaration } from "@/api/assess/declaration";
+import { statsOverview } from "@/api/assess/stats";
+
 export default {
   name: "Index",
+  data() {
+    return {
+      loading: true,
+      statCards: [],
+      recentList: [],
+      quickActions: []
+    };
+  },
   computed: {
-    /** 检查当前用户是否拥有综测模块任意权限 */
-    hasAnyAccess() {
-      const perms = this.$store.getters.permissions || [];
-      // 管理员拥有 *:*:* 通配权限
-      if (perms.includes("*:*:*")) return true;
-      // 普通用户按前缀匹配三个角色对应的权限域
-      return perms.some(
-        p =>
-          p.startsWith("assess:material:") ||
-          p.startsWith("assess:stats:") ||
-          p.startsWith("assess:review:")
-      );
+    roles() {
+      return this.$store.getters.roles || [];
+    },
+    isStudent() {
+      return this.roles.includes("assess_student");
+    },
+    isCounselor() {
+      return this.roles.includes("assess_counselor") || this.roles.includes("admin");
+    },
+    isCommittee() {
+      return this.roles.includes("assess_committee");
     }
+  },
+  created() {
+    this.initQuickActions();
+    this.fetchData();
   },
   methods: {
     goTo(path) {
       this.$router.push(path).catch(() => {});
+    },
+    initQuickActions() {
+      if (this.isStudent) {
+        this.quickActions = [
+          { label: "上传材料", icon: "el-icon-upload", type: "primary", plain: true, path: "/assess/material" },
+          { label: "新建申报", icon: "el-icon-plus", type: "primary", plain: false, path: "/assess/declaration" }
+        ];
+      } else if (this.isCounselor) {
+        this.quickActions = [
+          { label: "去审核", icon: "el-icon-check", type: "primary", plain: false, path: "/assess/review" }
+        ];
+      } else if (this.isCommittee) {
+        this.quickActions = [
+          { label: "查看班级统计", icon: "el-icon-data-analysis", type: "primary", plain: false, path: "/assess/stats" }
+        ];
+      }
+    },
+    fetchData() {
+      this.loading = true;
+      if (this.isStudent) {
+        this.fetchStudentData();
+      } else if (this.isCounselor) {
+        this.fetchCounselorData();
+      } else if (this.isCommittee) {
+        this.fetchCommitteeData();
+      } else {
+        this.loading = false;
+      }
+    },
+    /** 学生视角 */
+    fetchStudentData() {
+      const pMaterial = listMaterial({ pageNum: 1, pageSize: 1 }).then(r => r.total || 0).catch(() => 0);
+      const pDeclTotal = listDeclaration({ pageNum: 1, pageSize: 1 }).then(r => r.total || 0).catch(() => 0);
+      const pPending = listDeclaration({ pageNum: 1, pageSize: 1, status: "1" }).then(r => r.total || 0).catch(() => 0);
+      const pScore = listDeclaration({ pageNum: 1, pageSize: 50 }).then(r => {
+        const rows = r.rows || [];
+        return rows
+          .filter(row => row.status !== "0" && row.totalScore != null)
+          .reduce((sum, row) => sum + Number(row.totalScore), 0);
+      }).catch(() => 0);
+      const pRecent = listDeclaration({ pageNum: 1, pageSize: 5 }).then(r => r.rows || []).catch(() => []);
+
+      Promise.all([pMaterial, pDeclTotal, pPending, pScore, pRecent]).then(([materialTotal, declTotal, pending, score, recent]) => {
+        this.statCards = [
+          { label: "我的材料", value: materialTotal, color: "#409EFF", path: "/assess/material" },
+          { label: "我的申报", value: declTotal, color: "#409EFF", path: "/assess/declaration" },
+          { label: "待审核", value: pending, color: "#E6A23C", path: "/assess/declaration" },
+          { label: "累计得分", value: score, color: "#409EFF", path: "/assess/declaration" }
+        ];
+        this.recentList = recent;
+        this.loading = false;
+      });
+    },
+    /** 辅导员/admin 视角 */
+    fetchCounselorData() {
+      const pPending = listDeclaration({ pageNum: 1, pageSize: 1, status: "1" }).then(r => r.total || 0).catch(() => 0);
+      const pPassed = listDeclaration({ pageNum: 1, pageSize: 1, status: "4" }).then(r => r.total || 0).catch(() => 0);
+      const pRejected = listDeclaration({ pageNum: 1, pageSize: 1, status: "5" }).then(r => r.total || 0).catch(() => 0);
+      const pAll = listDeclaration({ pageNum: 1, pageSize: 1 }).then(r => r.total || 0).catch(() => 0);
+      const pRecent = listDeclaration({ pageNum: 1, pageSize: 5 }).then(r => r.rows || []).catch(() => []);
+
+      Promise.all([pPending, pPassed, pRejected, pAll, pRecent]).then(([pending, passed, rejected, all, recent]) => {
+        this.statCards = [
+          { label: "待审核", value: pending, color: "#E6A23C", path: "/assess/review" },
+          { label: "全部通过", value: passed, color: "#409EFF", path: "/assess/declaration" },
+          { label: "已驳回", value: rejected, color: "#F56C6C", path: "/assess/declaration" },
+          { label: "申报总数", value: all, color: "#409EFF", path: "/assess/declaration" }
+        ];
+        this.recentList = recent;
+        this.loading = false;
+      });
+    },
+    /** 班委视角 */
+    fetchCommitteeData() {
+      const pOverview = statsOverview({}).then(r => r.data || {}).catch(() => ({}));
+      const pRecent = listDeclaration({ pageNum: 1, pageSize: 5 }).then(r => r.rows || []).catch(() => []);
+
+      Promise.all([pOverview, pRecent]).then(([overview, recent]) => {
+        this.statCards = [
+          { label: "学生数", value: overview.studentCount || 0, color: "#409EFF", path: "/assess/stats" },
+          { label: "待审核", value: overview.pendingCount || 0, color: "#E6A23C", path: "/assess/stats" },
+          { label: "已通过", value: overview.passedCount || 0, color: "#67C23A", path: "/assess/stats" },
+          { label: "平均分", value: overview.avgScore != null ? overview.avgScore : "-", color: "#409EFF", path: "/assess/stats" }
+        ];
+        this.recentList = recent;
+        this.loading = false;
+      });
+    },
+    statusText(status) {
+      const map = { "0": "草稿", "1": "已提交", "2": "审核中", "3": "部分通过", "4": "全部通过", "5": "已驳回" };
+      return map[status] || "未知";
+    },
+    statusTagType(status) {
+      const map = { "0": "info", "1": "", "2": "warning", "3": "warning", "4": "success", "5": "danger" };
+      return map[status] || "info";
     }
   }
 };
@@ -141,130 +199,72 @@ export default {
   padding: 20px;
 }
 
-/* 顶部大标题区 */
+/* hero 渐变区（约 70px，深蓝渐变，左对齐） */
 .hero-section {
-  text-align: center;
-  padding: 40px 20px 30px;
-  background: linear-gradient(135deg, #409eff 0%, #337ecc 100%);
+  text-align: left;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
   border-radius: 8px;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   color: #fff;
 }
 .hero-title {
-  font-size: 36px;
+  font-size: 22px;
   font-weight: 700;
-  margin: 0 0 10px 0;
-  letter-spacing: 4px;
+  margin: 0 0 4px 0;
+  letter-spacing: 2px;
 }
-.hero-subtitle-main {
-  font-size: 20px;
-  font-weight: 400;
-  margin: 0 0 12px 0;
-  opacity: 0.95;
-}
-.hero-subtitle-desc {
-  font-size: 14px;
+.hero-subtitle {
+  font-size: 13px;
   margin: 0;
   opacity: 0.8;
-  line-height: 1.6;
 }
 
-/* 角色入口卡片 */
-.role-cards {
-  margin-bottom: 30px;
+/* 数字卡片区 */
+.stat-cards {
+  margin-bottom: 20px;
 }
-.role-card {
+.stat-card {
   cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
-  margin-bottom: 15px;
-  border-top: 3px solid transparent;
+  text-align: center;
+  padding: 10px 0;
+  transition: transform 0.2s;
 }
-.role-card:hover {
-  transform: translateY(-4px);
+.stat-card:hover {
+  transform: translateY(-3px);
 }
-.role-card-inner {
+.stat-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: #303133;
+  line-height: 1.4;
+}
+.stat-label {
+  font-size: 14px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+/* 最近申报表 */
+.recent-card {
+  margin-bottom: 20px;
+}
+.recent-header {
+  display: flex;
+  align-items: center;
+}
+.recent-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+/* 快捷操作 */
+.quick-actions {
   text-align: center;
   padding: 10px 0;
 }
-.role-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 16px;
-  font-size: 28px;
-  color: #fff;
-}
-.role-icon-student {
-  background: #409eff;
-}
-.role-icon-monitor {
-  background: #67c23a;
-}
-.role-icon-reviewer {
-  background: #e6a23c;
-}
-.role-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  color: #303133;
-}
-.role-desc {
-  font-size: 13px;
-  color: #909399;
-  margin: 0 0 12px 0;
-  line-height: 1.5;
-}
-.role-action {
-  font-size: 13px;
-  color: #409eff;
-}
-
-/* 核心特性区 */
-.features-section {
-  margin-top: 10px;
-}
-.features-heading {
-  font-size: 20px;
-  font-weight: 600;
-  color: #303133;
-  margin: 0 0 20px 0;
-  padding-left: 10px;
-  border-left: 4px solid #409eff;
-}
-.feature-card {
-  margin-bottom: 15px;
-  transition: box-shadow 0.3s;
-}
-.feature-card-inner {
-  text-align: center;
-  padding: 8px 0;
-}
-.feature-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  background: #ecf5ff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 12px;
-  font-size: 24px;
-  color: #409eff;
-}
-.feature-title {
-  font-size: 15px;
-  font-weight: 600;
-  margin: 0 0 6px 0;
-  color: #303133;
-}
-.feature-desc {
-  font-size: 12px;
-  color: #909399;
-  margin: 0;
-  line-height: 1.5;
+.quick-actions .el-button {
+  margin: 0 8px;
 }
 </style>

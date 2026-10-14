@@ -154,38 +154,38 @@
     
     // theme-light 浅色主题
     &.theme-light {
-      border-right: 1px solid #e8eaf0;
+      border-right: 1px solid #e6e6e6;
       box-shadow: none;
 
       .el-menu-item,
       .el-submenu__title {
-        color: rgba(0, 0, 0, 0.65);
+        color: #303133;
       }
 
       .el-menu-item.is-active {
-        color: var(--current-color, #409eff) !important;
+        color: #2563eb !important;
         position: relative;
 
         &::before {
           content: '';
           position: absolute;
           inset: 0;
-          background-color: var(--current-color-light, #ecf5ff);
-          border-right: 3px solid var(--current-color, #409eff);
+          background-color: #e8f1ff;
+          border-right: 3px solid #2563eb;
           pointer-events: none;
           z-index: 1;
         }
       }
 
       .el-submenu.is-active > .el-submenu__title {
-        color: var(--current-color, #409eff) !important;
+        color: #2563eb !important;
       }
 
       .el-menu-item:not(.is-active):hover,
       .submenu-title-noDropdown:hover,
       .el-submenu__title:hover {
         background-color: #f5f7fa !important;
-        color: rgba(0, 0, 0, 0.85) !important;
+        color: #2563eb !important;
       }
 
       .nest-menu .el-submenu > .el-submenu__title,
@@ -193,7 +193,7 @@
         background-color: #fafafa !important;
 
         &:hover {
-          background-color: #f0f5ff !important;
+          background-color: #e8f1ff !important;
         }
       }
     }

@@ -65,6 +65,11 @@
       <el-table-column label="申报ID" prop="declarationId" width="90" align="center" />
       <el-table-column label="申报单号" prop="declarationNo" width="170" :show-overflow-tooltip="true" />
       <el-table-column label="细则标题" prop="regulationTitle" :show-overflow-tooltip="true" />
+      <el-table-column label="学年/学期" width="140" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.academicYear || '-' }} / {{ scope.row.semester === '1' ? '第一学期' : '第二学期' }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="总分" prop="totalScore" width="90" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.totalScore != null ? scope.row.totalScore : '-' }}</span>
@@ -234,7 +239,11 @@
             <span>{{ scope.row.evidenceConfidence != null ? (scope.row.evidenceConfidence * 100).toFixed(0) + '%' : '-' }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="规则调整说明" prop="ruleCheckResult" :show-overflow-tooltip="true" />
+        <el-table-column label="规则调整说明" prop="ruleCheckResult" :show-overflow-tooltip="true">
+          <template slot-scope="scope">
+            <span>{{ formatRuleAdjust(scope.row.ruleCheckResult) }}</span>
+          </template>
+        </el-table-column>
       </el-table>
 
       <div v-if="detailData.totalScore != null" style="text-align: right; margin-top: 16px;">
@@ -339,7 +348,7 @@ export default {
     handleMaterialSelectionChange(selection) {
       this.form.materialIds = selection.map(item => item.materialId);
     },
-    handleAdd() { this.reset(); this.open = true; this.title = "新增申报"; },
+    handleAdd() { this.reset(); this.open = true; this.title = "新增申报"; listMaterial({ pageNum: 1, pageSize: 100, userId: this.$store.getters.userId }).then(response => { this.materialOptions = response.rows; }); },
     handleUpdate(row) {
       this.reset();
       getDeclaration(row.declarationId).then(response => { this.form = response.data; this.editOpen = true; this.title = "修改申报"; });
@@ -367,6 +376,27 @@ export default {
         return delDeclaration(row.declarationId);
       }).then(() => { this.getList(); this.$modal.msgSuccess("删除成功"); }).catch(() => {});
     },
+    formatRuleAdjust(value) {
+      if (value == null || value === "" || value === "[]" || value === "{}") return "无调整";
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+          if (parsed.length === 0) return "无调整";
+          return parsed.map(item => {
+            if (typeof item === "string") return item;
+            return item.remark || item.message || item.desc || item.ruleName || JSON.stringify(item);
+          }).join("；");
+        }
+        if (typeof parsed === "object") {
+          if (Object.keys(parsed).length === 0) return "无调整";
+          return parsed.remark || parsed.message || parsed.desc || parsed.ruleName || JSON.stringify(parsed);
+        }
+        return String(parsed);
+      } catch (e) {
+        return value;
+      }
+    },
+
     handleExport() {
       this.download('assess/declaration/export', { ...this.queryParams }, `declaration_${new Date().getTime()}.xlsx`);
     }

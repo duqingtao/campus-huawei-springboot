@@ -16,7 +16,7 @@
       </el-col>
       <el-col :span="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-value" style="color: #E6A23C;">{{ overview.reviewingCount || 0 }}</div>
+          <div class="stat-value" style="color: #E6A23C;">{{ overview.pendingCount || 0 }}</div>
           <div class="stat-label">待审核数</div>
         </el-card>
       </el-col>

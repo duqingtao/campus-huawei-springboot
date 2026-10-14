@@ -72,8 +72,8 @@ public class AssessMaterialServiceImpl implements IAssessMaterialService
         }
         else if (isCommittee)
         {
-            // 班委：按 dept_id 查本班材料
-            material.setDeptId(SecurityUtils.getDeptId());
+            // 班委：无权访问材料数据
+            return new ArrayList<>();
         }
         // 辅导员（assess_counselor, data_scope=1）：不加过滤，看全部
 
@@ -86,6 +86,7 @@ public class AssessMaterialServiceImpl implements IAssessMaterialService
     @Override
     public AssessMaterial selectMaterialById(Long materialId)
     {
+        checkMaterialOwnership(materialId);
         return materialMapper.selectMaterialById(materialId);
     }
 
@@ -138,7 +139,31 @@ public class AssessMaterialServiceImpl implements IAssessMaterialService
             material.setExtractStatus("0");
             material.setCreateBy(username);
 
-            return materialMapper.insertMaterial(material);
+            int rows = materialMapper.insertMaterial(material);
+            Long materialId = material.getMaterialId();
+
+            // 异步触发OCR + 字段抽取，不阻塞上传接口
+            // insertMaterial 无 @Transactional，插入已自动提交，新线程可读到数据
+            final AssessMaterial asyncMaterial = material;
+            final String asyncUsername = username;
+            new Thread(() -> {
+                try {
+                    Thread.sleep(500); // 等待提交落盘
+                    log.info("材料[{}]异步OCR开始", materialId);
+                    triggerOcrAndExtract(asyncMaterial, asyncUsername);
+                } catch (Exception e) {
+                    log.error("材料[{}]异步OCR/字段抽取异常", materialId, e);
+                    AssessMaterial failUpdate = new AssessMaterial();
+                    failUpdate.setMaterialId(materialId);
+                    failUpdate.setOcrStatus("3");
+                    failUpdate.setExtractStatus("3");
+                    failUpdate.setRemark("异步OCR异常：" + e.getMessage());
+                    failUpdate.setUpdateBy(asyncUsername);
+                    materialMapper.updateMaterial(failUpdate);
+                }
+            }, "ocr-async-" + materialId).start();
+
+            return rows;
         }
         catch (Exception e)
         {
@@ -152,6 +177,7 @@ public class AssessMaterialServiceImpl implements IAssessMaterialService
     @Override
     public int updateMaterial(AssessMaterial material)
     {
+        checkMaterialOwnership(material.getMaterialId());
         return materialMapper.updateMaterial(material);
     }
 
@@ -161,6 +187,10 @@ public class AssessMaterialServiceImpl implements IAssessMaterialService
     @Override
     public int deleteMaterialByIds(Long[] materialIds)
     {
+        for (Long materialId : materialIds)
+        {
+            checkMaterialOwnership(materialId);
+        }
         return materialMapper.deleteMaterialByIds(materialIds);
     }
 
@@ -172,6 +202,7 @@ public class AssessMaterialServiceImpl implements IAssessMaterialService
     @Override
     public int reprocessMaterial(Long materialId, String username)
     {
+        checkMaterialOwnership(materialId);
         AssessMaterial material = materialMapper.selectMaterialById(materialId);
         if (material == null)
         {
@@ -206,6 +237,38 @@ public class AssessMaterialServiceImpl implements IAssessMaterialService
         }
 
         return 1;
+    }
+
+    /**
+     * 行级归属校验（防水平越权）
+     * <p>
+     * 学生只能操作自己的材料；班委无权访问材料；辅导员/admin 不受限。
+     */
+    private void checkMaterialOwnership(Long materialId)
+    {
+        AssessMaterial material = materialMapper.selectMaterialById(materialId);
+        if (material == null)
+        {
+            throw new ServiceException("数据不存在或已被删除");
+        }
+        if (SecurityUtils.isAdmin())
+        {
+            return;
+        }
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        List<SysRole> roles = loginUser.getUser().getRoles();
+        boolean isStudent = roles != null && roles.stream()
+                .anyMatch(r -> "assess_student".equals(r.getRoleKey()));
+        boolean isCommittee = roles != null && roles.stream()
+                .anyMatch(r -> "assess_committee".equals(r.getRoleKey()));
+        if (isCommittee)
+        {
+            throw new ServiceException("无权访问材料数据");
+        }
+        if (isStudent && material.getUserId().longValue() != SecurityUtils.getUserId().longValue())
+        {
+            throw new ServiceException("无权操作他人数据");
+        }
     }
 
     /**

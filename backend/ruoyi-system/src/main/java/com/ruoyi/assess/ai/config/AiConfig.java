@@ -34,14 +34,14 @@ public class AiConfig
     private String vlmModel = "qwen2.5-vl-72b";
 
     /**
-     * RestTemplate Bean，超时30秒
+     * RestTemplate Bean，超时120秒(条款抽取长文档需要)
      */
     @Bean("aiRestTemplate")
     public RestTemplate aiRestTemplate()
     {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(30000);
-        factory.setReadTimeout(30000);
+        factory.setReadTimeout(120000);
         return new RestTemplate(factory);
     }
 

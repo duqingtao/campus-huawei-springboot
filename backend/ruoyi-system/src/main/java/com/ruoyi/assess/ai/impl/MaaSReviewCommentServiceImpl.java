@@ -35,9 +35,13 @@ public class MaaSReviewCommentServiceImpl implements ReviewCommentService
 
     /** 系统提示词 */
     private static final String SYSTEM_PROMPT =
-        "你是综测审核助手。根据以下申报明细和审核上下文，起草一段驳回意见。" +
-        "只输出JSON，不要输出其他内容。JSON格式如下：\n" +
-        "{\"draft_comment\": \"驳回意见草稿，不超过200字\"}";
+        "你是综测审核助手。根据以下申报明细中规则引擎砍分的情况，起草一段具体的驳回意见。\n" +
+        "要求：\n" +
+        "1. 针对每条被砍分的明细，说明砍分原因和建议修改方式\n" +
+        "2. 语气客观专业，面向学生\n" +
+        "3. 只输出JSON，不要输出任何其他内容\n" +
+        "输出格式：{\"draft_comment\": \"这里是具体的驳回意见内容\"}\n" +
+        "示例输出：{\"draft_comment\": \"材料1匹配条款A-01，建议分3.00，但触发封顶规则最终分0.00。该类别总分已超封顶，建议调整申报材料类别或删除重复项后重新提交。\"}";
 
     @Autowired
     private MaaSClient maaSClient;

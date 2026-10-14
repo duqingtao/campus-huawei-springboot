@@ -21,6 +21,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.utils.poi.ExcelUtil;
+import com.ruoyi.assess.ai.dto.ClausePreviewResult;
 import com.ruoyi.assess.domain.AssessRegulationClause;
 import com.ruoyi.assess.service.IAssessRegulationClauseService;
 
@@ -43,8 +44,8 @@ public class AssessRegulationClauseController extends BaseController
     @GetMapping("/list")
     public TableDataInfo list(AssessRegulationClause clause)
     {
-        startPage();
-        List<AssessRegulationClause> list = clauseService.selectClauseList(clause);
+        // 条款以树形展示，不分页
+        List<AssessRegulationClause> list = clauseService.selectClauseTreeList(clause);
         return getDataTable(list);
     }
 
@@ -118,23 +119,53 @@ public class AssessRegulationClauseController extends BaseController
     }
 
     /**
-     * 导入条款
+     * 预览导入条款
      * <p>
-     * 上传综测细则文件(PDF/Word/TXT)，AI自动识别并提取条款，批量插入数据库。
+     * 上传综测细则文件(PDF/Word/TXT)，AI提取条款后返回预览结果，不落库。
      *
      * @param regulationId 所属细则ID
      * @param file         上传的文件
-     * @return 导入结果，含成功条数
+     * @return 预览结果，含条款模块树和元数据
      */
     @PreAuthorize("@ss.hasPermi('assess:clause:add')")
-    @Log(title = "条款管理", businessType = BusinessType.IMPORT)
-    @PostMapping("/import")
-    public AjaxResult importClause(@RequestParam("regulationId") Long regulationId,
+    @Log(title = "条款导入", businessType = BusinessType.IMPORT)
+    @PostMapping("/import/preview")
+    public AjaxResult previewImport(@RequestParam("regulationId") Long regulationId,
             @RequestParam("file") MultipartFile file)
     {
         try
         {
-            int count = clauseService.importClauses(regulationId, file, getUsername());
+            ClausePreviewResult result = clauseService.previewImportClauses(regulationId, file);
+            return AjaxResult.success(result);
+        }
+        catch (IllegalArgumentException e)
+        {
+            return AjaxResult.error(e.getMessage());
+        }
+        catch (Exception e)
+        {
+            return AjaxResult.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 确认导入条款
+     * <p>
+     * 将前端确认后的条款树批量插入数据库。
+     *
+     * @param regulationId 所属细则ID
+     * @param clauses      确认后的条款模块树
+     * @return 导入结果，含成功条数
+     */
+    @PreAuthorize("@ss.hasPermi('assess:clause:add')")
+    @Log(title = "条款导入", businessType = BusinessType.IMPORT)
+    @PostMapping("/import/confirm")
+    public AjaxResult confirmImport(@RequestParam("regulationId") Long regulationId,
+            @RequestBody List<AssessRegulationClause> clauses)
+    {
+        try
+        {
+            int count = clauseService.confirmImportClauses(regulationId, clauses, getUsername());
             return AjaxResult.success("成功导入" + count + "条条款", count);
         }
         catch (IllegalArgumentException e)
@@ -143,7 +174,7 @@ public class AssessRegulationClauseController extends BaseController
         }
         catch (Exception e)
         {
-            return AjaxResult.error("条款识别失败，请检查文件格式或手动录入");
+            return AjaxResult.error("条款导入失败：" + e.getMessage());
         }
     }
 }

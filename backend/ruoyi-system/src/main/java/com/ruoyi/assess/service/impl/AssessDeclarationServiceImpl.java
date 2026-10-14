@@ -31,6 +31,8 @@ import com.ruoyi.common.core.domain.model.LoginUser;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.StringUtils;
+import com.ruoyi.system.mapper.SysUserMapper;
+import com.ruoyi.common.core.domain.entity.SysUser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -68,6 +70,9 @@ public class AssessDeclarationServiceImpl implements IAssessDeclarationService
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private SysUserMapper sysUserMapper;
 
     /**
      * 查询综测申报单列表（含数据隔离）
@@ -108,6 +113,7 @@ public class AssessDeclarationServiceImpl implements IAssessDeclarationService
     @Override
     public AssessDeclaration selectDeclarationById(Long declarationId)
     {
+        checkDeclarationOwnership(declarationId);
         AssessDeclaration declaration = declarationMapper.selectDeclarationById(declarationId);
         if (declaration != null)
         {
@@ -167,6 +173,7 @@ public class AssessDeclarationServiceImpl implements IAssessDeclarationService
     @Override
     public int updateDeclaration(AssessDeclaration declaration)
     {
+        checkDeclarationOwnership(declaration.getDeclarationId());
         checkDraftStatus(declaration.getDeclarationId());
         return declarationMapper.updateDeclaration(declaration);
     }
@@ -180,6 +187,7 @@ public class AssessDeclarationServiceImpl implements IAssessDeclarationService
     {
         for (Long declarationId : declarationIds)
         {
+            checkDeclarationOwnership(declarationId);
             checkDraftStatus(declarationId);
             itemMapper.deleteItemByDeclarationId(declarationId);
         }
@@ -221,7 +229,7 @@ public class AssessDeclarationServiceImpl implements IAssessDeclarationService
         }
 
         // 获取该细则下所有条款（作为候选）
-        List<AssessRegulationClause> allClauses = clauseMapper.selectClauseByRegulationId(declaration.getRegulationId());
+        List<AssessRegulationClause> allClauses = clauseMapper.selectLeafClauseByRegulationId(declaration.getRegulationId());
         if (allClauses == null || allClauses.isEmpty())
         {
             throw new ServiceException("该细则下没有条款，无法匹配");
@@ -316,6 +324,44 @@ public class AssessDeclarationServiceImpl implements IAssessDeclarationService
     }
 
     // ========== 私有方法 ==========
+
+    /**
+     * 行级归属校验（防水平越权）
+     * <p>
+     * 学生只能操作自己的申报单；班委只能操作本部门学生的申报单；辅导员/admin 不受限。
+     */
+    private void checkDeclarationOwnership(Long declarationId)
+    {
+        AssessDeclaration declaration = declarationMapper.selectDeclarationById(declarationId);
+        if (declaration == null)
+        {
+            throw new ServiceException("数据不存在或已被删除");
+        }
+        if (SecurityUtils.isAdmin())
+        {
+            return;
+        }
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        List<SysRole> roles = loginUser.getUser().getRoles();
+        boolean isStudent = roles != null && roles.stream()
+                .anyMatch(r -> "assess_student".equals(r.getRoleKey()));
+        boolean isCommittee = roles != null && roles.stream()
+                .anyMatch(r -> "assess_committee".equals(r.getRoleKey()));
+        if (isCommittee)
+        {
+            // 班委：校验申报单的创建学生是否属于本部门
+            SysUser declareUser = sysUserMapper.selectUserById(declaration.getUserId());
+            if (declareUser == null || declareUser.getDeptId() == null
+                    || declareUser.getDeptId().longValue() != SecurityUtils.getDeptId().longValue())
+            {
+                throw new ServiceException("无权操作他人数据");
+            }
+        }
+        else if (isStudent && declaration.getUserId().longValue() != SecurityUtils.getUserId().longValue())
+        {
+            throw new ServiceException("无权操作他人数据");
+        }
+    }
 
     /**
      * 生成申报单号：SB + yyyyMMdd + 4位序号

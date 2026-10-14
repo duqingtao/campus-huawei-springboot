@@ -52,6 +52,20 @@ public class MaaSClient
      */
     public String chatCompletion(String systemPrompt, String userContent, String model)
     {
+        return chatCompletion(systemPrompt, userContent, model, 4096);
+    }
+
+    /**
+     * 纯文本对话（自定义 max_tokens）
+     *
+     * @param systemPrompt 系统提示词
+     * @param userContent  用户输入
+     * @param model        模型名称
+     * @param maxTokens    最大输出 token 数
+     * @return 模型回复内容，失败返回null
+     */
+    public String chatCompletion(String systemPrompt, String userContent, String model, int maxTokens)
+    {
         List<Map<String, Object>> messages = new ArrayList<>();
 
         Map<String, Object> systemMsg = new HashMap<>();
@@ -64,7 +78,7 @@ public class MaaSClient
         userMsg.put("content", userContent);
         messages.add(userMsg);
 
-        return doChatCompletion(messages, model);
+        return doChatCompletion(messages, model, maxTokens);
     }
 
     /**
@@ -115,6 +129,14 @@ public class MaaSClient
      */
     private String doChatCompletion(List<Map<String, Object>> messages, String model)
     {
+        return doChatCompletion(messages, model, 4096);
+    }
+
+    /**
+     * 执行chat/completions请求（自定义 max_tokens）
+     */
+    private String doChatCompletion(List<Map<String, Object>> messages, String model, int maxTokens)
+    {
         String apiKey = aiConfig.getApiKey();
         if (StringUtils.isEmpty(apiKey))
         {
@@ -128,7 +150,7 @@ public class MaaSClient
         requestBody.put("model", model);
         requestBody.put("messages", messages);
         requestBody.put("temperature", 0.1);
-        requestBody.put("max_tokens", 4096);
+        requestBody.put("max_tokens", maxTokens);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

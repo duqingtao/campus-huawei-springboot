@@ -35,6 +35,14 @@ public interface AssessRegulationClauseMapper
     public List<AssessRegulationClause> selectClauseByRegulationId(Long regulationId);
 
     /**
+     * 根据细则ID查询叶子条款(仅clause_type=1且parent_id<>0，用于AI匹配候选)
+     *
+     * @param regulationId 细则ID
+     * @return 叶子条款集合
+     */
+    public List<AssessRegulationClause> selectLeafClauseByRegulationId(Long regulationId);
+
+    /**
      * 新增综测条款
      *
      * @param clause 综测条款

@@ -26,6 +26,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		<result property="updateTime"      column="update_time"      />
 		<result property="delFlag"         column="del_flag"         />
 		<result property="remark"          column="remark"           />
+		<result property="regulationTitle" column="regulation_title" />
 	</resultMap>
 
 	<sql id="selectDeclarationVo">
@@ -33,8 +34,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                d.student_name, d.class_name, d.academic_year, d.semester,
                d.total_score, d.status, d.submit_time, d.review_user_id, d.review_time,
                d.review_color, d.review_comment,
-               d.create_by, d.create_time, d.update_by, d.update_time, d.del_flag, d.remark
+               d.create_by, d.create_time, d.update_by, d.update_time, d.del_flag, d.remark,
+               r.title AS regulation_title
         from assess_declaration d
+               LEFT JOIN assess_regulation r ON d.regulation_id = r.regulation_id
     </sql>
 
 	<select id="selectDeclarationList" parameterType="com.ruoyi.assess.domain.AssessDeclaration" resultMap="AssessDeclarationResult">

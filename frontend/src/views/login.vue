@@ -2,7 +2,7 @@
   <div class="login">
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form">
       <h3 class="title">{{title}}</h3>
-      <p class="subtitle">大学生综合素质测评智能认定系统</p>
+      <p class="subtitle">大学生综合素质测评智能认定系统 · 华为云 MaaS 大模型驱动</p>
       <el-form-item prop="username">
         <el-input
           v-model="loginForm.username"
@@ -54,10 +54,7 @@
           <router-link class="link-type" :to="'/register'">立即注册</router-link>
         </div>
       </el-form-item>
-      <!-- 演示账号提示 -->
-      <div class="demo-tip">
-        演示账号：学生 student02 / 班委 committee01 / 辅导员 counselor01，密码均为 admin123
-      </div>
+      <div class="demo-hint">演示账号见项目 README</div>
     </el-form>
     <!--  底部  -->
     <div class="el-login-footer">
@@ -169,21 +166,19 @@ export default {
   justify-content: center;
   align-items: center;
   height: 100%;
-  background-image: url("../assets/images/login-background.jpg");
-  background-size: cover;
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
 }
 .title {
   margin: 0px auto 10px auto;
   text-align: center;
   color: #303133;
-  font-size: 24px;
-  font-weight: 600;
 }
 .subtitle {
   margin: 0px auto 30px auto;
   text-align: center;
   color: #909399;
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .login-form {
@@ -233,11 +228,10 @@ export default {
 .login-code-img {
   height: 38px;
 }
-.demo-tip {
-  margin-top: 10px;
+.demo-hint {
   text-align: center;
+  color: #909399;
   font-size: 12px;
-  color: #C0C4CC;
-  line-height: 1.6;
+  margin-top: 10px;
 }
 </style>

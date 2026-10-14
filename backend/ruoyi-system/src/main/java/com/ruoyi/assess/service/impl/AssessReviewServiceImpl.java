@@ -67,14 +67,30 @@ public class AssessReviewServiceImpl implements IAssessReviewService
             throw new ServiceException("申报单ID不能为空");
         }
         String result = auditDTO.getResult();
-        if (StringUtils.isEmpty(result) || !"3".equals(result) && !"4".equals(result) && !"5".equals(result))
+        if (StringUtils.isEmpty(result) || !"pass".equals(result) && !"suspect".equals(result) && !"reject".equals(result))
         {
-            throw new ServiceException("审核结果不合法，仅支持：3=部分通过 4=全部通过 5=已驳回");
+            throw new ServiceException("审核结果不合法，仅支持：pass=通过 suspect=存疑 reject=驳回");
         }
-        String reviewColor = auditDTO.getReviewColor();
-        if (StringUtils.isEmpty(reviewColor) || !"1".equals(reviewColor) && !"2".equals(reviewColor) && !"3".equals(reviewColor))
+        // status + reviewColor 由服务端按 result 派生，不再要求前端传参
+        // pass→status=4(全部通过),reviewColor=1(绿)
+        // suspect→status=3(部分通过),reviewColor=2(黄)
+        // reject→status=5(已驳回),reviewColor=3(红)
+        String status;
+        String reviewColor;
+        if ("pass".equals(result))
         {
-            throw new ServiceException("审核颜色不合法，仅支持：1=绿 2=黄 3=红");
+            status = "4";
+            reviewColor = "1"; // 绿
+        }
+        else if ("suspect".equals(result))
+        {
+            status = "3";
+            reviewColor = "2"; // 黄
+        }
+        else
+        {
+            status = "5";
+            reviewColor = "3"; // 红
         }
 
         // ── ① 校验申报单状态 ──
@@ -91,7 +107,7 @@ public class AssessReviewServiceImpl implements IAssessReviewService
         // ── ② 更新申报单 ──
         AssessDeclaration update = new AssessDeclaration();
         update.setDeclarationId(auditDTO.getDeclarationId());
-        update.setStatus(result);
+        update.setStatus(status);
         update.setReviewColor(reviewColor);
         update.setReviewUserId(userId);
         update.setReviewTime(new Date());
@@ -103,16 +119,8 @@ public class AssessReviewServiceImpl implements IAssessReviewService
         // review_round = 现有审核记录数 + 1
         int existingCount = reviewMapper.countByDeclarationId(auditDTO.getDeclarationId());
 
-        // review_result 映射：result=3/4(通过类) → '1'(通过)，result=5(驳回) → '2'(驳回)
-        String reviewResult;
-        if ("5".equals(result))
-        {
-            reviewResult = "2"; // 驳回
-        }
-        else
-        {
-            reviewResult = "1"; // 通过
-        }
+        // review_result 映射：pass/suspect → '1'(通过)，reject → '2'(驳回)
+        String reviewResult = "reject".equals(result) ? "2" : "1";
 
         AssessReview review = new AssessReview();
         review.setDeclarationId(auditDTO.getDeclarationId());
@@ -125,8 +133,8 @@ public class AssessReviewServiceImpl implements IAssessReviewService
         review.setCreateBy(username);
         reviewMapper.insertReview(review);
 
-        log.info("申报单[{}]审核完成，审核人={}，结果={}，颜色={}，轮次={}",
-            auditDTO.getDeclarationId(), username, result, reviewColor, existingCount + 1);
+        log.info("申报单[{}]审核完成，审核人={}，结果={}，status={}，颜色={}，轮次={}",
+            auditDTO.getDeclarationId(), username, result, status, reviewColor, existingCount + 1);
         return 1;
     }
 

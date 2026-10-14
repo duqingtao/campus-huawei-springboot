@@ -237,6 +237,8 @@ export default {
       fileList: [],
       // OCR抽屉
       ocrDrawer: false,
+      // 轮询定时器
+      pollTimer: null,
       // 当前查看的材料
       currentMaterial: {},
       // 查询参数
@@ -270,6 +272,9 @@ export default {
   },
   created() {
     this.getList();
+  },
+  beforeDestroy() {
+    this.stopOcrPolling();
   },
   methods: {
     /** 查询材料列表 */
@@ -349,10 +354,33 @@ export default {
       this.open = false;
       this.fileList = [];
       if (response.code === 200) {
-        this.$modal.msgSuccess("上传成功");
+        this.$modal.msgSuccess("上传成功，OCR识别已自动开始");
         this.getList();
+        this.startOcrPolling();
       } else {
         this.$modal.msgError(response.msg || "上传失败");
+      }
+    },
+    // 启动OCR状态轮询：每3秒刷新列表，无处理中状态时停止
+    startOcrPolling() {
+      this.stopOcrPolling();
+      this.pollTimer = setInterval(() => {
+        listMaterial(this.queryParams).then(response => {
+          this.materialList = response.rows;
+          this.total = response.total;
+          // 检查是否还有处理中的材料
+          const hasProcessing = response.rows.some(r => r.ocrStatus === '1' || r.extractStatus === '1');
+          if (!hasProcessing) {
+            this.stopOcrPolling();
+          }
+        });
+      }, 3000);
+    },
+    // 停止轮询
+    stopOcrPolling() {
+      if (this.pollTimer) {
+        clearInterval(this.pollTimer);
+        this.pollTimer = null;
       }
     },
     // 上传失败回调

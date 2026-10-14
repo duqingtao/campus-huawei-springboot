@@ -192,7 +192,7 @@ export default {
         pageSize: 10,
         regulationNo: undefined,
         title: undefined,
-        status: undefined
+        status: '1'   // 默认只显示"已发布"
       },
       // 表单参数
       form: {},
@@ -230,7 +230,7 @@ export default {
     },
     // 状态标签类型映射
     statusTagType(status) {
-      const map = { "0": "info", "1": "success", "2": "danger" };
+      const map = { "0": "info", "1": "success", "2": "info" };
       return map[status] || "info";
     },
     // 取消按钮

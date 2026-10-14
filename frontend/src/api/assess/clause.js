@@ -51,14 +51,25 @@ export function delClause(clauseIds) {
   })
 }
 
-// 导入条款
-export function importClause(data) {
+// 预览导入条款（AI提取，不落库）
+export function previewImportClause(data) {
   return request({
-    url: '/assess/clause/import',
+    url: '/assess/clause/import/preview',
     method: 'post',
     headers: {
       'Content-Type': 'multipart/form-data'
     },
+    timeout: 120000,
     data: data
+  })
+}
+
+// 确认导入条款（批量落库）
+export function confirmImportClause(regulationId, clauses) {
+  return request({
+    url: '/assess/clause/import/confirm',
+    method: 'post',
+    params: { regulationId: regulationId },
+    data: clauses
   })
 }

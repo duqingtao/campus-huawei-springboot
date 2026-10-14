@@ -72,6 +72,7 @@
       :data="clauseList"
       row-key="clauseId"
       :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
+      default-expand-all
       v-if="refreshTable"
     >
       <el-table-column label="序号" type="index" width="55" align="center" />
@@ -187,62 +188,130 @@
       </div>
     </el-dialog>
 
-    <!-- 导入条款对话框 -->
-    <el-dialog title="导入条款" :visible.sync="importOpen" width="500px" append-to-body>
-      <el-form ref="importForm" :model="importForm" :rules="importRules" label-width="100px">
-        <el-form-item label="所属细则" prop="regulationId">
-          <el-select
-            v-model="importForm.regulationId"
-            placeholder="请选择细则"
-            clearable
-            filterable
-            style="width: 100%"
-          >
-            <el-option
-              v-for="item in regulationOptions"
-              :key="item.regulationId"
-              :label="item.regulationNo + ' - ' + item.title"
-              :value="item.regulationId"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="上传文件">
-          <el-upload
-            ref="upload"
-            :action="uploadUrl"
-            :headers="uploadHeaders"
-            :data="uploadData"
-            accept=".pdf,.docx,.txt"
-            :auto-upload="false"
-            :limit="1"
-            :on-exceed="handleExceed"
-            :on-success="handleUploadSuccess"
-            :on-error="handleUploadError"
-            :on-change="handleFileChange"
-            :file-list="fileList"
-            drag
-          >
-            <i class="el-icon-upload"></i>
-            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-            <div class="el-upload__tip" slot="tip" style="color: #909399; font-size: 12px;">
-              支持PDF、Word、TXT格式，文件不超过10MB<br/>
-              上传综测细则文件，AI将自动识别并提取条款
-            </div>
-          </el-upload>
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" :loading="importLoading" @click="submitImport">确 定</el-button>
-        <el-button @click="cancelImport">取 消</el-button>
+    <!-- 导入条款对话框（两步：上传解析 → 预览确认） -->
+    <el-dialog title="导入条款" :visible.sync="importOpen" width="850px" append-to-body :close-on-click-modal="false">
+      <!-- 步骤1：选择文件并解析 -->
+      <div v-if="importStep === 1">
+        <el-form ref="importForm" :model="importForm" :rules="importRules" label-width="100px">
+          <el-form-item label="所属细则" prop="regulationId">
+            <el-select
+              v-model="importForm.regulationId"
+              placeholder="请选择细则"
+              clearable
+              filterable
+              style="width: 100%"
+            >
+              <el-option
+                v-for="item in regulationOptions"
+                :key="item.regulationId"
+                :label="item.regulationNo + ' - ' + item.title"
+                :value="item.regulationId"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="上传文件">
+            <el-upload
+              ref="upload"
+              accept=".pdf,.docx,.txt"
+              :auto-upload="false"
+              :limit="1"
+              :on-exceed="handleExceed"
+              :on-change="handleFileChange"
+              :file-list="fileList"
+              drag
+            >
+              <i class="el-icon-upload"></i>
+              <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+              <div class="el-upload__tip" slot="tip" style="color: #909399; font-size: 12px;">
+                支持PDF、Word、TXT格式，文件不超过10MB<br/>
+                上传综测细则文件，AI将自动识别并提取条款
+              </div>
+            </el-upload>
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button type="primary" :loading="importLoading" @click="submitImport">
+            <span v-if="importLoading">AI 解析中，长文档约需 30~60 秒...</span>
+            <span v-else>开始解析</span>
+          </el-button>
+          <el-button @click="cancelImport">取 消</el-button>
+        </div>
+      </div>
+
+      <!-- 步骤2：预览确认 -->
+      <div v-if="importStep === 2">
+        <!-- 元数据 -->
+        <el-descriptions :column="4" border size="small" style="margin-bottom: 16px">
+          <el-descriptions-item label="原文长度">{{ previewMeta.textLength }} 字</el-descriptions-item>
+          <el-descriptions-item label="分块数">{{ previewMeta.chunkCount }}</el-descriptions-item>
+          <el-descriptions-item label="截断">
+            <el-tag :type="previewMeta.truncated ? 'warning' : 'success'" size="mini">
+              {{ previewMeta.truncated ? '是' : '否' }}
+            </el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="模块数">{{ previewClauses.length }}</el-descriptions-item>
+        </el-descriptions>
+        <div v-if="previewMeta.errors && previewMeta.errors.length > 0" style="margin-bottom: 12px">
+          <el-alert
+            v-for="(err, idx) in previewMeta.errors"
+            :key="idx"
+            :title="err"
+            type="warning"
+            :closable="false"
+            show-icon
+            style="margin-bottom: 4px"
+          />
+        </div>
+
+        <!-- 预览条款树 -->
+        <el-table
+          ref="previewTable"
+          :data="previewClauses"
+          row-key="clauseNo"
+          :tree-props="{children: 'children'}"
+          default-expand-all
+          border
+          max-height="400"
+          @selection-change="handlePreviewSelectionChange"
+        >
+          <el-table-column type="selection" width="45" align="center" />
+          <el-table-column label="编号" prop="clauseNo" width="100" :show-overflow-tooltip="true" />
+          <el-table-column label="标题" prop="clauseTitle" :show-overflow-tooltip="true">
+            <template slot-scope="scope">
+              <span :style="{color: scope.row.invalid ? '#c0c4cc' : '#303133', textDecoration: scope.row.invalid ? 'line-through' : 'none'}">
+                {{ scope.row.clauseTitle || '(空)' }}
+              </span>
+              <el-tag v-if="scope.row.invalid" type="danger" size="mini" style="margin-left: 6px">
+                {{ scope.row.invalidReason }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="类型" width="90" align="center">
+            <template slot-scope="scope">
+              <el-tag :type="clauseTypeTagType(scope.row.clauseType)" size="mini">
+                {{ clauseTypeText(scope.row.clauseType) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="分值" prop="maxScore" width="70" align="center" />
+          <el-table-column label="原文摘抄" prop="clauseText" :show-overflow-tooltip="true" min-width="200" />
+        </el-table>
+
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="importStep = 1">返回重选</el-button>
+          <el-button type="primary" :loading="confirmLoading" @click="submitConfirm">
+            确认导入（{{ selectedPreviewCount }} 条）
+          </el-button>
+          <el-button @click="cancelImport">取 消</el-button>
+        </div>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import { listClause, getClause, addClause, updateClause, delClause, clauseTree, importClause } from "@/api/assess/clause";
+import { listClause, getClause, addClause, updateClause, delClause, clauseTree, previewImportClause, confirmImportClause } from "@/api/assess/clause";
 import { listRegulation } from "@/api/assess/regulation";
-import { getToken } from "@/utils/auth";
 
 export default {
   name: "Clause",
@@ -288,6 +357,8 @@ export default {
       // ===== 导入相关 =====
       importOpen: false,
       importLoading: false,
+      confirmLoading: false,
+      importStep: 1,
       importForm: {
         regulationId: undefined
       },
@@ -297,19 +368,14 @@ export default {
         ]
       },
       fileList: [],
-      selectedFile: null
+      selectedFile: null,
+      // 预览数据
+      previewClauses: [],
+      previewMeta: {},
+      selectedPreviewCount: 0
     };
   },
   computed: {
-    uploadUrl() {
-      return process.env.VUE_APP_BASE_API + "/assess/clause/import";
-    },
-    uploadHeaders() {
-      return { Authorization: "Bearer " + getToken() };
-    },
-    uploadData() {
-      return { regulationId: this.importForm.regulationId };
-    }
   },
   created() {
     this.getRegulationOptions();
@@ -446,13 +512,21 @@ export default {
         ...this.queryParams
       }, `clause_${new Date().getTime()}.xlsx`);
     },
-    // ===== 导入条款 =====
+    // ===== 导入条款（两步流程） =====
+    clauseTypeTagType(type) {
+      const map = { "0": "info", "1": "success", "2": "danger", "3": "warning", "4": "danger" };
+      return map[type] || "info";
+    },
     handleImport() {
       this.importForm = {
         regulationId: this.queryParams.regulationId || undefined
       };
       this.fileList = [];
       this.selectedFile = null;
+      this.importStep = 1;
+      this.previewClauses = [];
+      this.previewMeta = {};
+      this.selectedPreviewCount = 0;
       this.importOpen = true;
     },
     handleFileChange(file) {
@@ -469,41 +543,69 @@ export default {
           return;
         }
         this.importLoading = true;
-        // 手动构建FormData提交
         const formData = new FormData();
         formData.append("regulationId", this.importForm.regulationId);
         formData.append("file", this.selectedFile.raw);
-        importClause(formData).then(response => {
+        previewImportClause(formData).then(response => {
           this.importLoading = false;
-          this.importOpen = false;
-          this.$modal.msgSuccess(response.msg);
-          // 自动切换到所选细则的树形视图
-          this.queryParams.regulationId = this.importForm.regulationId;
-          this.getList();
+          if (response.code === 200 && response.data) {
+            this.previewClauses = response.data.clauses || [];
+            this.previewMeta = response.data.meta || {};
+            this.importStep = 2;
+            // 默认全选非 invalid 项
+            this.$nextTick(() => {
+              this.setDefaultSelection();
+            });
+          } else {
+            this.$modal.msgError(response.msg || "解析失败");
+          }
         }).catch(() => {
           this.importLoading = false;
         });
       });
     },
-    handleUploadSuccess(response) {
-      this.importLoading = false;
-      if (response.code === 200) {
-        this.importOpen = false;
-        this.$modal.msgSuccess(response.msg);
-        this.queryParams.regulationId = this.importForm.regulationId;
-        this.getList();
-      } else {
-        this.$modal.msgError(response.msg);
-      }
+    setDefaultSelection() {
+      // 默认勾选所有非 invalid 的模块行
+      this.previewClauses.forEach(row => {
+        if (!row.invalid) {
+          this.$refs.previewTable.toggleRowSelection(row, true);
+        }
+      });
     },
-    handleUploadError() {
-      this.importLoading = false;
-      this.$modal.msgError("上传失败，请检查网络或文件格式");
+    handlePreviewSelectionChange(selection) {
+      this.selectedPreviewCount = selection.length;
+    },
+    submitConfirm() {
+      const selection = this.$refs.previewTable.selection || [];
+      if (selection.length === 0) {
+        this.$modal.msgWarning("请至少勾选一条条款");
+        return;
+      }
+      this.doConfirm(selection);
+    },
+    doConfirm(selectedModules) {
+      this.confirmLoading = true;
+      confirmImportClause(this.importForm.regulationId, selectedModules).then(response => {
+        this.confirmLoading = false;
+        if (response.code === 200) {
+          this.importOpen = false;
+          this.$modal.msgSuccess(response.msg);
+          this.queryParams.regulationId = this.importForm.regulationId;
+          this.getList();
+        } else {
+          this.$modal.msgError(response.msg);
+        }
+      }).catch(() => {
+        this.confirmLoading = false;
+      });
     },
     cancelImport() {
       this.importOpen = false;
       this.fileList = [];
       this.selectedFile = null;
+      this.importStep = 1;
+      this.previewClauses = [];
+      this.previewMeta = {};
     }
   }
 };

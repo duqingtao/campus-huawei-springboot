@@ -37,7 +37,7 @@ public class AssessRegulationController extends BaseController
     /**
      * 查询综测细则列表
      */
-    @PreAuthorize("@ss.hasPermi('assess:regulation:list')")
+    @PreAuthorize("@ss.hasPermi('assess:regulation:query')")
     @GetMapping("/list")
     public TableDataInfo list(AssessRegulation regulation)
     {

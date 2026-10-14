@@ -57,6 +57,12 @@ public class AssessRegulationClause extends BaseEntity
     /** 子条款列表(树形结构) */
     private List<AssessRegulationClause> children;
 
+    /** 预览标记：该条数据是否无效(缺编号或标题) */
+    private Boolean invalid;
+
+    /** 预览标记：无效原因 */
+    private String invalidReason;
+
     public Long getClauseId()
     {
         return clauseId;
@@ -165,6 +171,26 @@ public class AssessRegulationClause extends BaseEntity
     public void setChildren(List<AssessRegulationClause> children)
     {
         this.children = children;
+    }
+
+    public Boolean getInvalid()
+    {
+        return invalid;
+    }
+
+    public void setInvalid(Boolean invalid)
+    {
+        this.invalid = invalid;
+    }
+
+    public String getInvalidReason()
+    {
+        return invalidReason;
+    }
+
+    public void setInvalidReason(String invalidReason)
+    {
+        this.invalidReason = invalidReason;
     }
 
     @Override
