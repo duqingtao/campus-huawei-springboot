@@ -1,5 +1,8 @@
 <template>
   <div class="login">
+    <!-- 装饰光斑 -->
+    <div class="decor-circle decor-tl"></div>
+    <div class="decor-circle decor-br"></div>
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form">
       <h3 class="title">{{title}}</h3>
       <p class="subtitle">大学生综合素质测评智能认定系统 · 华为云 MaaS 大模型驱动</p>
@@ -166,26 +169,48 @@ export default {
   justify-content: center;
   align-items: center;
   height: 100%;
-  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  background: linear-gradient(135deg, #eef4ff 0%, #dce8ff 45%, #f6f9ff 100%);
+  overflow: hidden;
+  position: relative;
 }
+
+/* 装饰光斑 */
+.decor-circle {
+  position: absolute;
+  width: 60vmin;
+  height: 60vmin;
+  background: radial-gradient(closest-side, rgba(37, 99, 235, .18), transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+}
+.decor-tl {
+  top: -20vmin;
+  left: -10vmin;
+}
+.decor-br {
+  bottom: -20vmin;
+  right: -10vmin;
+}
+
 .title {
   margin: 0px auto 10px auto;
   text-align: center;
-  color: #303133;
+  color: #1e3a8a;
 }
 .subtitle {
   margin: 0px auto 30px auto;
   text-align: center;
-  color: #909399;
+  color: #64748b;
   font-size: 12px;
   line-height: 1.5;
 }
 
 .login-form {
-  border-radius: 6px;
+  border-radius: 12px;
   background: #ffffff;
   width: 400px;
   padding: 25px 25px 5px 25px;
+  box-shadow: 0 8px 30px rgba(30, 58, 138, .15);
   z-index: 1;
   .el-input {
     height: 38px;
@@ -220,10 +245,11 @@ export default {
   bottom: 0;
   width: 100%;
   text-align: center;
-  color: #fff;
+  color: #64748b;
   font-family: Arial;
   font-size: 12px;
   letter-spacing: 1px;
+  z-index: 1;
 }
 .login-code-img {
   height: 38px;

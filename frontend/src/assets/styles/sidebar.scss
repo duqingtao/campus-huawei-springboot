@@ -151,7 +151,7 @@
         }
       }
     }
-    
+
     // theme-light 浅色主题
     &.theme-light {
       border-right: 1px solid #e6e6e6;
@@ -162,25 +162,26 @@
         color: #303133;
       }
 
+      // 选中态——一级菜单项（直接设背景+右侧条，不用 ::before 避免 z-index 遮文字）
       .el-menu-item.is-active {
         color: #2563eb !important;
-        position: relative;
-
-        &::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background-color: #e8f1ff;
-          border-right: 3px solid #2563eb;
-          pointer-events: none;
-          z-index: 1;
-        }
+        background-color: #e8f1ff !important;
+        box-shadow: inset -3px 0 0 #2563eb;
       }
 
+      // 选中态——展开的子菜单标题
       .el-submenu.is-active > .el-submenu__title {
         color: #2563eb !important;
       }
 
+      // 选中态——子菜单内的选中项（比 .el-submenu .el-menu-item 多一层 .is-active，特异性更高）
+      .el-submenu .el-menu-item.is-active {
+        color: #2563eb !important;
+        background-color: #e8f1ff !important;
+        box-shadow: inset -3px 0 0 #2563eb;
+      }
+
+      // 悬停态——一级菜单
       .el-menu-item:not(.is-active):hover,
       .submenu-title-noDropdown:hover,
       .el-submenu__title:hover {
@@ -188,13 +189,17 @@
         color: #2563eb !important;
       }
 
+      // 子菜单背景
       .nest-menu .el-submenu > .el-submenu__title,
       .el-submenu .el-menu-item {
         background-color: #fafafa !important;
+      }
 
-        &:hover {
-          background-color: #e8f1ff !important;
-        }
+      // 悬停态——子菜单项
+      .nest-menu .el-submenu > .el-submenu__title:hover,
+      .el-submenu .el-menu-item:not(.is-active):hover {
+        background-color: #e8f1ff !important;
+        color: #2563eb !important;
       }
     }
   }
@@ -284,7 +289,7 @@
   }
 }
 
-// when menu collapsed
+// when menu collapsed — 折叠侧边栏弹出菜单
 .el-menu--vertical {
   &>.el-menu {
     .svg-icon {
@@ -298,6 +303,19 @@
       // you can use $subMenuHover
       background-color: rgba(0, 0, 0, 0.06) !important;
     }
+  }
+
+  // 浅色主题折叠弹出菜单选中态
+  .el-menu-item.is-active {
+    color: #2563eb !important;
+    background-color: #e8f1ff !important;
+  }
+
+  // 浅色主题折叠弹出菜单悬停态
+  .el-menu-item:hover,
+  .el-submenu__title:hover {
+    color: #2563eb !important;
+    background-color: #f5f7fa !important;
   }
 
   // the scroll bar appears when the subMenu is too long
