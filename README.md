@@ -57,12 +57,10 @@ sql/       建表与菜单/演示数据脚本
        enabled: true      # false 切换 Mock 实现，无 MaaS 也可完整演示
      maas:
        base-url: https://api.modelarts-maas.com/v1
-       api-key: {你的 api-key，勿提交真实值}
+       api-key: {..........}
        model: qwen2.5-vl-72b
 3. 启动后端（RuoYiApplication）与前端（npm run dev）
 4. 演示账号：admin（管理员）/ {TODO 学生账号} / {TODO 班委账号} / {TODO 辅导员账号}
-
-## 六、演示流程
 
 ## 六、演示流程
 
@@ -70,8 +68,6 @@ sql/       建表与菜单/演示数据脚本
 ![申报详情证据链](docs/screenshots/declaration-evidence.png)
 ![条款批量导入预览](docs/screenshots/clause-import-preview.png)
 ![审核三态与AI驳回草稿](docs/screenshots/review-dialog.png)
-
-{TODO：此处插入 4 张截图——首页仪表盘 / 申报详情证据链 / 条款导入预览 / 审核三态}
 
 ## 七、AI 可靠性设计
 
