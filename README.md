@@ -63,10 +63,13 @@ sql/       建表与菜单/演示数据脚本
 4. 演示账号：admin（管理员）/ {TODO 学生账号} / {TODO 班委账号} / {TODO 辅导员账号}
 
 ## 六、演示流程
-
+### 1.首页仪表盘
 ![首页仪表盘](docs/screenshots/dashboard.png)
+### 1.申报详情证据链
 ![申报详情证据链](docs/screenshots/declaration-evidence.png)
+### 1.条款批量导入预览
 ![条款批量导入预览](docs/screenshots/clause-import-preview.png)
+### 1.审核三态与AI驳回草稿
 ![审核三态与AI驳回草稿](docs/screenshots/review-dialog.png)
 
 ## 七、AI 可靠性设计
