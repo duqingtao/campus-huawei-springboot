@@ -64,13 +64,13 @@ sql/       建表与菜单/演示数据脚本
 
 ## 六、演示流程
 ### 1.首页仪表盘
-![首页仪表盘](docs/screenshots/dashboard.png)
+![首页仪表盘](https://github.com/duqingtao/campus-huawei-springboot/releases/download/screenshots-v1/dashboard.png)
 ### 1.申报详情证据链
-![申报详情证据链](docs/screenshots/declaration-evidence.png)
+![申报详情证据链](https://github.com/duqingtao/campus-huawei-springboot/releases/download/screenshots-v1/declaration-evidence.png)
 ### 1.条款批量导入预览
-![条款批量导入预览](docs/screenshots/clause-import-preview.png)
+![条款批量导入预览](https://github.com/duqingtao/campus-huawei-springboot/releases/download/screenshots-v1/clause-import-preview.png)
 ### 1.审核三态与AI驳回草稿
-![审核三态与AI驳回草稿](docs/screenshots/review-dialog.png)
+![审核三态与AI驳回草稿](https://github.com/duqingtao/campus-huawei-springboot/releases/download/screenshots-v1/review-dialog.png)
 
 ## 七、AI 可靠性设计
 
